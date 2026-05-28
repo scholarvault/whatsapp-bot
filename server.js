@@ -27,8 +27,9 @@ let sheetsService = null;
 async function initSheets() {
     try {
         let authOpts = { scopes: ['https://www.googleapis.com/auth/spreadsheets'] };
-        if (process.env.GOOGLE_CREDENTIALS) {
-            authOpts.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        const envCreds = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        if (envCreds) {
+            authOpts.credentials = JSON.parse(envCreds);
         } else {
             authOpts.keyFile = GOOGLE_CREDS_PATH;
         }
