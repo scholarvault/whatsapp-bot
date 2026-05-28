@@ -26,10 +26,13 @@ const GOOGLE_CREDS_PATH = path.join(__dirname, 'google-credentials.json');
 let sheetsService = null;
 async function initSheets() {
     try {
-        const auth = new google.auth.GoogleAuth({
-            keyFile: GOOGLE_CREDS_PATH,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
+        let authOpts = { scopes: ['https://www.googleapis.com/auth/spreadsheets'] };
+        if (process.env.GOOGLE_CREDENTIALS) {
+            authOpts.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        } else {
+            authOpts.keyFile = GOOGLE_CREDS_PATH;
+        }
+        const auth = new google.auth.GoogleAuth(authOpts);
         const client = await auth.getClient();
         sheetsService = google.sheets({ version: 'v4', auth: client });
         console.log('[Google Sheets] Connected successfully.');
