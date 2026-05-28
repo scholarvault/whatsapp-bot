@@ -2293,6 +2293,12 @@ app.post('/api/unified-campaign', async (req, res) => {
 setupSendPulse(app, getDb, saveDb);
 
 async function autoStartEvolution() {
+    // Only attempt auto-start on Windows local machines
+    if (process.platform !== 'win32') {
+        console.log('[Auto-Start] Running in cloud environment. Skipping local Evolution API auto-start.');
+        return;
+    }
+    
     try {
         // Check if Evolution API is already active
         await axios.get('http://localhost:8080', { timeout: 2000 });
