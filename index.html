@@ -2198,17 +2198,31 @@
 // ═══════════════════════════════════════════════════════════
 
 async function startEvolutionAPI() {
-    toast('Triggering Evolution API Initialization...', 'info');
+    toast('Generating WhatsApp QR Code from Cloud...', 'info');
     try {
         const res = await fetch('/api/start-evolution', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
             toast(data.message, 'success');
+            if (data.qrcode) {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:99999;" onclick="this.remove()">
+                    <div style="background:#fff;padding:30px;border-radius:12px;text-align:center;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.5);" onclick="event.stopPropagation()">
+                        <h2 style="color:#111;margin-top:0;margin-bottom:15px;font-size:22px;"><i data-lucide="smartphone"></i> Link WhatsApp</h2>
+                        <img src="${data.qrcode}" style="width:280px;height:280px;border:4px solid #eee;border-radius:8px;">
+                        <p style="color:#555;font-size:14px;line-height:1.5;margin-top:20px;">Open WhatsApp on your phone<br><b>Settings -> Linked Devices -> Link a Device</b><br>and scan this code.</p>
+                        <button class="btn btn-primary" style="width:100%;margin-top:15px;" onclick="this.parentElement.parentElement.remove(); setTimeout(checkConnection, 3000);">Done</button>
+                    </div>
+                </div>`;
+                document.body.appendChild(div);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
         } else {
             toast(data.message, 'error');
         }
     } catch (e) {
-        toast('Command Center Backend not running. Please run "node server.js" first.', 'error');
+        toast('Command Center Backend not running.', 'error');
     }
 }
 

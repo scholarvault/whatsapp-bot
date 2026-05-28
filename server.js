@@ -853,16 +853,38 @@ async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fi
 
 // --- API Endpoints: Core Features ---
 
-app.post('/api/start-evolution', (req, res) => {
-    if (evolutionProcess) {
-        return res.status(400).json({ success: false, message: 'Evolution API is already running.' });
-    }
+app.post('/api/start-evolution', async (req, res) => {
     try {
-        const evoPath = 'C:\\Users\\Shyam\\evolution-api';
-        console.log(`Starting Evolution API at ${evoPath}`);
-        evolutionProcess = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', 'npm run start'], { cwd: evoPath, detached: true, windowsHide: false });
-        evolutionProcess.unref();
-        return res.json({ success: true, message: 'Evolution API started.' });
+        const evoUrl = process.env.EVO_API_URL || 'http://localhost:8080';
+        const evoKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        const instanceName = 'ScholarVault';
+        
+        console.log(`[Cloud Init] Requesting WhatsApp QR Code from ${evoUrl}...`);
+        
+        // Try to create the instance
+        let response = await axios.post(`${evoUrl}/instance/create`, {
+            instanceName: instanceName,
+            qrcode: true,
+            integration: "WHATSAPP-BAILEYS"
+        }, {
+            headers: { apikey: evoKey },
+            validateStatus: () => true
+        });
+
+        // If it already exists, just fetch the connect endpoint
+        if (response.status === 403 || response.status === 400 || response.data?.error) {
+            console.log('[Cloud Init] Instance exists. Fetching connect QR...');
+            response = await axios.get(`${evoUrl}/instance/connect/${instanceName}`, {
+                headers: { apikey: evoKey },
+                validateStatus: () => true
+            });
+        }
+
+        if (response.data && response.data.base64) {
+            return res.json({ success: true, message: 'Scan the QR Code on your screen!', qrcode: response.data.base64 });
+        } else {
+            return res.json({ success: true, message: 'Instance already connected or processing.', qrcode: null });
+        }
     } catch (e) {
         return res.status(500).json({ success: false, message: e.message });
     }
