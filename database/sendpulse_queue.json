@@ -1,0 +1,180 @@
+{
+  "spq_1777198898470": {
+    "id": "spq_1777198898470",
+    "name": "Ai Health Conference",
+    "totalContacts": 1,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T10:21:38.470Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "ssundar861@gmail.com",
+            "name": ""
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear Shyam,",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777198898470,
+        "status": "failed",
+        "spCampaignId": null,
+        "sentAt": null,
+        "error": "Unauthorized!"
+      }
+    ]
+  },
+  "spq_1777202181803": {
+    "id": "spq_1777202181803",
+    "name": "Ai Health Conference",
+    "totalContacts": 1,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T11:16:21.804Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "ssundar861@gmail.com",
+            "name": "shyam"
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear {{name}}\n\n\nHow are you ?",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777202181803,
+        "status": "failed",
+        "spCampaignId": null,
+        "sentAt": null,
+        "error": "Unauthorized!"
+      }
+    ]
+  },
+  "spq_1777202549701": {
+    "id": "spq_1777202549701",
+    "name": "Ai Health Conference",
+    "totalContacts": 1,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T11:22:29.701Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "ssundar861@gmail.com",
+            "name": "shyam"
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear {{name}}.",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777202549701,
+        "status": "failed",
+        "spCampaignId": null,
+        "sentAt": null,
+        "error": "Book  653771 is empty"
+      }
+    ]
+  },
+  "spq_1777202838132": {
+    "id": "spq_1777202838132",
+    "name": "Ai Health Conference",
+    "totalContacts": 1,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T11:27:18.133Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "ssundar861@gmail.com",
+            "name": "shyam"
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear {{name}}.",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777202838132,
+        "status": "sent",
+        "spCampaignId": 491202,
+        "sentAt": "2026-04-26T11:27:26.478Z",
+        "error": null
+      }
+    ]
+  },
+  "spq_1777203304939": {
+    "id": "spq_1777203304939",
+    "name": "Ai Health Conference",
+    "totalContacts": 2,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T11:35:04.939Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "ssundar861@gmail.com",
+            "name": "shyam"
+          },
+          {
+            "email": "hello@scholarvault.in",
+            "name": "scholar"
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear Dr. {{name},\n\nI hope this message finds you well.\n\nI am writing to invite you and your research team to submit papers to ICAHCR 2026 — the International Conference on AI in Healthcare & Clinical Research, scheduled for August 22–23, 2026 (fully virtual).\n\nICAHCR 2026 is a ScholarVault Platinum-verified conference (92/100) covering six research tracks:\n• AI in Diagnostics & Medical Imaging\n• Drug Discovery & Genomics / Precision Medicine\n• Telemedicine & Digital Health\n• Hospital Operations AI & EHR Systems\n• Clinical Research, Trials & Regulatory AI\n• Health Data Privacy, Ethics & Federated Learning\n\nKey details:\n→ Paper Submission Deadline: June 30, 2026\n→ Acceptance Notification: July 15, 2026\n→ ISBN-registered proceedings with DOI per paper\n→ Best Paper, Best Presentation & Young Researcher Awards\n→ SDGs 3, 4, 9 & 17 aligned\n→ 100% refund if withdrawn before July 1, 2026\n\nThe conference is organised under the ScholarVault Academic Network, India's first automated conference verification platform — so researchers can verify legitimacy before submitting, protecting your institution's academic reputation.\n\nSubmit papers or register here:\nhttps://aihealth.scholarvault.in\n\nVerification report: https://aihealth.scholarvault.in/badge\n\nI would be glad to share the conference brochure or answer any questions.\n\nWarm regards,\nShyam\nFounder, ScholarVault\nconferences@scholarvault.in\nscholarvault.in",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777203304939,
+        "status": "failed",
+        "spCampaignId": null,
+        "sentAt": null,
+        "error": "Book  653778 is empty"
+      }
+    ]
+  },
+  "spq_1777203834014": {
+    "id": "spq_1777203834014",
+    "name": "Ai Health Conference",
+    "totalContacts": 1,
+    "totalBatches": 1,
+    "createdAt": "2026-04-26T11:43:54.015Z",
+    "status": "completed",
+    "batches": [
+      {
+        "batchIdx": 0,
+        "contacts": [
+          {
+            "email": "thescholarvault@gmail.com",
+            "name": "Shyam"
+          }
+        ],
+        "subject": "Invitation to AI health Conference 2026",
+        "htmlBody": "Dear Dr. {{name}},\n\nI hope this message finds you well.\n\nI am writing to invite you and your research team to submit papers to ICAHCR 2026 — the International Conference on AI in Healthcare & Clinical Research, scheduled for August 22–23, 2026 (fully virtual).\n\nICAHCR 2026 is a ScholarVault Platinum-verified conference (92/100) covering six research tracks:\n• AI in Diagnostics & Medical Imaging\n• Drug Discovery & Genomics / Precision Medicine\n• Telemedicine & Digital Health\n• Hospital Operations AI & EHR Systems\n• Clinical Research, Trials & Regulatory AI\n• Health Data Privacy, Ethics & Federated Learning\n\nKey details:\n→ Paper Submission Deadline: June 30, 2026\n→ Acceptance Notification: July 15, 2026\n→ ISBN-registered proceedings with DOI per paper\n→ Best Paper, Best Presentation & Young Researcher Awards\n→ SDGs 3, 4, 9 & 17 aligned\n→ 100% refund if withdrawn before July 1, 2026\n\nThe conference is organised under the ScholarVault Academic Network, India's first automated conference verification platform — so researchers can verify legitimacy before submitting, protecting your institution's academic reputation.\n\nSubmit papers or register here:\nhttps://aihealth.scholarvault.in\n\nVerification report: https://aihealth.scholarvault.in/badge\n\nI would be glad to share the conference brochure or answer any questions.\n\nWarm regards,\nShyam\nFounder, ScholarVault\nconferences@scholarvault.in\nscholarvault.in",
+        "campaignName": "Ai Health Conference",
+        "senderName": "ScholarVault Conferences",
+        "senderEmail": "conferences@scholarvault.in",
+        "scheduledFor": 1777203834014,
+        "status": "sent",
+        "spCampaignId": 491206,
+        "sentAt": "2026-04-26T11:44:03.289Z",
+        "error": null
+      }
+    ]
+  }
+}

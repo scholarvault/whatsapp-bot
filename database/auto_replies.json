@@ -1,0 +1,167 @@
+[
+  {
+    "trigger": "how to register",
+    "reply": "{Sure|Happy to help}! Here's how to register for *ICAHCR 2026* 📝\n\n*Step 1:* Visit → https://aihealth.scholarvault.in\n*Step 2:* Click \"Register Now\"\n*Step 3:* Fill your details (Name, Institute, Email)\n*Step 4:* Complete payment & download confirmation ✅\n\n{Takes less than 5 minutes|Super quick process}!\n\nNeed help at any step? Just reply!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "more details",
+    "reply": "{Sure thing|Absolutely}! Here's everything about *ICAHCR 2026* 📋\n\n💡 *Topics:*\n• AI & ML in Diagnostics\n• Drug Discovery with Deep Learning\n• Digital Health & Telemedicine\n• Ethics & Governance in AI\n• Clinical Decision Support Systems\n\n🏅 *Organised by ScholarVault* | ✅ Startup India Recognized\n📅 August 22–23, 2026 | 100% Virtual / Online\n🔗 https://aihealth.scholarvault.in\n\nAny specific questions? {I'm here|Just ask}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "who are you",
+    "reply": "{Hello|Hi}! 👋 We are *ScholarVault* — India's leading academic conference platform.\n\n🏅 Startup India Recognized (DPIIT Certified)\n🌍 10,000+ researchers across 30+ countries\n🔒 92/100 Trust & Safety Score\n\nWe invited you to *ICAHCR 2026* (August 22–23, Virtual).\n🔗 https://www.scholarvault.in\n\n{Any questions?|Happy to help!}",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "who is this",
+    "reply": "{Hi|Hello}! 👋 This is *ScholarVault* — India's leading academic conference organiser.\n\n🏅 Startup India Recognized | 92/100 Trust Score\n🎓 Organising *ICAHCR 2026* — August 22–23, Virtual\n🔗 https://www.scholarvault.in\n\n{Any questions?|What would you like to know?}",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "how did you get my number",
+    "reply": "{Completely understand|That's a valid question}! 🙏\n\nYour number is part of our academic research network — compiled from conference registrations and academic institution partnerships.\n\nWe comply with WhatsApp's messaging guidelines. Reply *STOP* anytime to be removed immediately.\n\n{Sorry if this was unexpected|We apologize for any inconvenience}.",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "how do you know",
+    "reply": "{Totally fair to ask|Completely understand}! 🙏\n\nYour contact is part of our verified academic research network. Reply *STOP* to be removed immediately from all future messages.\n\n{We respect your privacy|We apologize for any inconvenience}.",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "what is scholarvault",
+    "reply": "{Great question|Happy to explain}! 🌟\n\n*ScholarVault* — India's most trusted academic conference platform.\n\n🎯 *What we do:*\n• International research conferences\n• Scopus-indexed paper publication\n• AI-powered paper matching & peer review\n• Connecting researchers globally\n\n🏅 Startup India Recognized (DPIIT)\n🌍 10,000+ researchers | 30+ countries | 🔒 92/100 Trust Score\n\n🔗 https://www.scholarvault.in\n\n{Want to know about our conferences?|Shall I share upcoming events?}",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "interested",
+    "reply": "{Fantastic|Brilliant}! 🌟 Since you're interested:\n\n📌 *ICAHCR 2026* — AI in Healthcare Conference\n📅 August 22–23, 2026 | 100% Virtual\n\n✅ *You get:*\n• Scopus-indexed paper publication\n• Certificate of Participation\n• Networking with 200+ researchers from 15+ countries\n\n🔗 Register: https://aihealth.scholarvault.in\n\n{Shall I share registration steps?|Would you like the brochure?} Just say the word!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "yes",
+    "reply": "{Great to hear|Wonderful|Excellent}! 🎉\n\n*ICAHCR 2026* Full Details:\n📅 August 22–23, 2026\n📍 100% Virtual / Online\n🔗 Register: https://aihealth.scholarvault.in\n\n{We'd love to see you there|Looking forward to having you}! Any questions? {Just ask|We're here}.",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "register",
+    "reply": "{Sure|Great choice}! 🎉 Register here:\n🔗 https://aihealth.scholarvault.in\n\n📅 *ICAHCR 2026* | August 22–23, 2026 | Virtual\n\n{Takes just 5 minutes|Quick and easy}! Reply if you face any issue.",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "send brochure",
+    "reply": "{Sure|Absolutely}! 📄 Full conference kit:\n🔗 https://aihealth.scholarvault.in\n\n{The brochure PDF is available on the website|Download the brochure from the site}.",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "okay",
+    "reply": "{Perfect|Wonderful}! 😊 Whenever you're ready:\n🔗 https://aihealth.scholarvault.in\n\n{We're here if you have questions|Just ask anytime}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "ok",
+    "reply": "{Great|Perfect}! 😊 Visit: https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "thank",
+    "reply": "{You're most welcome|It's our pleasure|Anytime}! 😊\n\n{Feel free to reach out anytime|We're always here}.\n🌐 www.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "sure",
+    "reply": "{Wonderful|Great}! 😊 Here's the link to get started:\n🔗 https://aihealth.scholarvault.in\n\n{Reach out if you need help|We're here anytime}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "price",
+    "reply": "{Great question|Happy to help}! 💰 *ICAHCR 2026 Fees:*\n\n• 🎓 Students / Scholars: ₹3,499 ($159)\n• 👨‍🏫 Faculty / Researchers: ₹6,499 ($249)\n• 🎧 Listener (No Paper): ₹2,499 ($149)\n• 💼 Industry: ₹14,999 ($499)\n\n✅ Includes Certificate, Proceedings & Networking!\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "fee",
+    "reply": "💰 *ICAHCR 2026 Registration Fees:*\n\n• 🎓 Students / Scholars: ₹3,499 ($159)\n• 👨‍🏫 Faculty / Researchers: ₹6,499 ($249)\n• 🎧 Listener (No Paper): ₹2,499 ($149)\n• 💼 Industry: ₹14,999 ($499)\n\n✅ Includes Certificate & Proceedings\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "date",
+    "reply": "📅 *Conference Date: August 22–23, 2026*\n📍 100% Virtual / Online\n🔗 https://aihealth.scholarvault.in\n\n{Save the date|Mark your calendar}! 📌",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "when",
+    "reply": "📅 *ICAHCR 2026: August 22–23, 2026*\n📍 100% Virtual / Online\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "venue",
+    "reply": "📍 *ICAHCR 2026 Venue:* 100% Virtual / Online!\n\nAttend from anywhere globally. No travel or visa barriers.\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "certificate",
+    "reply": "🏆 *ICAHCR 2026 Certificates:*\n\n📜 Certificate of Participation — all attendees\n📜 Certificate of Presentation — paper presenters\n📜 Best Paper Award — top-ranked papers\n\n✅ Digitally signed & verifiable online.\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "scopus",
+    "reply": "📚 *Publication Details:*\n\n✅ Scopus-Indexed publication pathways for selected papers\n✅ Double-blind peer review\n✅ Extended versions eligible for SCI journals\n\n📝 https://aihealth.scholarvault.in\n\n{Submit early for priority review}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "deadline",
+    "reply": "⏳ *Key Deadlines — ICAHCR 2026:*\n\n📝 Paper Submission Deadline: *June 30, 2026*\n✅ Early Bird Ends: *July 15, 2026*\n\n🔗 https://aihealth.scholarvault.in\n\n⚠️ {Don't wait till the last minute|Submit early for priority review}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "online",
+    "reply": "🌐 *ICAHCR 2026 — Event Format:*\n\n✅ *100% Virtual Mode* — Attend from anywhere, no travel barriers.\n\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "contact",
+    "reply": "📞 *ScholarVault Contact:*\n\n📱 WhatsApp/Phone: +91-86101-00624\n📧 Email: conferences@scholarvault.in\n🌐 Website: https://www.scholarvault.in\n\n⏰ Mon–Sat, 9 AM – 6 PM IST",
+    "delayMinutes": 0
+  },
+  {
+    "trigger": "not interested",
+    "reply": "{Absolutely no problem|That's completely fine}! 🙏\n\n{No worries at all|We completely respect that}. Reply *STOP* to be removed from our list.\n\n{Wishing you all the best|Have a wonderful day}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "no thanks",
+    "reply": "{Absolutely fine|No problem at all}! 😊 {We respect your decision|No worries}.\n\nReply *STOP* to be removed. {Have a great day|Take care}!",
+    "delayMinutes": 1
+  },
+  {
+    "trigger": "busy",
+    "reply": "{No problem|Completely understood}! 😊 Our conference is on *August 22–23, 2026* — {plenty of time to plan|well in advance}.\n\n{Whenever you're free, we're here|No rush}!\n🔗 https://aihealth.scholarvault.in",
+    "delayMinutes": 2
+  },
+  {
+    "trigger": "wrong number",
+    "reply": "{Apologies for the confusion|So sorry}! 🙏 Reply *STOP* and you'll never hear from us again.\n\n{Once again, sincere apologies|Sorry for the trouble}.",
+    "delayMinutes": 0
+  },
+  {
+    "trigger": "spam",
+    "reply": "{We sincerely apologize|We understand}! 🙏\n\nWe are *ScholarVault* — Startup India Recognized (DPIIT).\n🔗 https://www.scholarvault.in | 📞 +91-86101-00624\n\nReply *STOP* to be removed immediately.",
+    "delayMinutes": 0
+  },
+  {
+    "trigger": "scam",
+    "reply": "{We understand your concern|That's a fair reaction}! 🙏\n\n*ScholarVault*: ✅ DPIIT Certified | ✅ 92/100 Trust Score | ✅ Active since 2022\n🔗 https://www.scholarvault.in | 📞 +91-86101-00624\n\nReply *STOP* to opt out.",
+    "delayMinutes": 0
+  },
+  {
+    "trigger": "fake",
+    "reply": "{We take this seriously|We understand}! 🙏\n\n*ScholarVault*: ✅ Startup India Recognized | ✅ 10,000+ researchers | ✅ 92/100 Trust Score\n🔗 https://www.scholarvault.in | 📞 +91-86101-00624\n\nReply *STOP* to be removed.",
+    "delayMinutes": 0
+  },
+  {
+    "trigger": "leave me alone",
+    "reply": "{Of course, we sincerely apologize|Absolutely, so sorry}! 🙏 Reply *STOP* to confirm removal.\n\n{Have a peaceful day|Take care}.",
+    "delayMinutes": 0
+  }
+]

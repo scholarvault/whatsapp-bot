@@ -1,0 +1,19 @@
+{
+  "test@test": {
+    "userRole": "Student",
+    "lastIntent": null,
+    "institution": "AIIMS Delhi",
+    "name": "Aisha",
+    "country": null,
+    "email": null
+  },
+  "918610100624@s.whatsapp.net": {
+    "userRole": null,
+    "lastIntent": "manual_takeover",
+    "institution": null,
+    "name": null,
+    "country": "Malaysia",
+    "email": null,
+    "escalated": true
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+.env
+.DS_Store
+google-credentials.json
+__pycache__/
+*.bat
+*.ps1
+*.csv
+*.xlsx
+*.txt
+docs.json
+Data training/
+test_*.js
+fix*.js
+update_kb.js
+refine_kb.js
+add_features_2.js
+add_summarizer.js
+apply_ui_facelift.js
+transform.js
