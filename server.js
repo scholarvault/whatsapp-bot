@@ -689,8 +689,8 @@ async function sendSmartMessage(remoteJid, instanceName, textReply, apiKey, butt
     
     const finalMessage = parseSpintax(textReply);
     
-    const EVO_API_URL = 'http://localhost:8080';
-    const key = apiKey || 'SV-EvoApi-2026-ScholarVault!'; 
+    const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
+    const key = apiKey || (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!'); 
 
     try {
         if (!skipDelay) {
@@ -779,8 +779,8 @@ async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fi
     }
 
     const finalCaption = parseSpintax(caption || '');
-    const EVO_API_URL = 'http://localhost:8080';
-    const key = apiKey || 'SV-EvoApi-2026-ScholarVault!';
+    const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
+    const key = apiKey || (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
 
     try {
         if (!skipDelay) {
@@ -872,8 +872,8 @@ app.get('/api/health', async (req, res) => {
     try {
         const instances = getDb('instances');
         const defaultInstName = getDefaultInstanceName();
-        let key = 'SV-EvoApi-2026-ScholarVault!';
-        let apiUrl = 'http://localhost:8080';
+        let key = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+        let apiUrl = (process.env.EVO_API_URL || 'http://localhost:8080');
         if (Array.isArray(instances) && instances.length > 0) {
             const inst = instances.find(i => i.name === defaultInstName) || instances[0];
             key = inst.apiKey || key;
@@ -1111,9 +1111,9 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
             if (mediatype && !base64) {
                 try {
                     console.log(`[Webhook Media Fetch] Fetching base64 media for message ${msg.key.id} from Evolution API...`);
-                    const EVO_API_URL = 'http://localhost:8080';
+                    const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
                     const instName = instanceName || getDefaultInstanceName();
-                    const key = 'SV-EvoApi-2026-ScholarVault!';
+                    const key = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
                     
                     const fetchRes = await axios.post(`${EVO_API_URL}/chat/getBase64FromMediaMessage/${instName}`, {
                         message: {
@@ -1759,9 +1759,9 @@ app.post('/api/inbox/:jid/media', async (req, res) => {
         const relativeUrl = `/uploads/${savedFileName}`;
         
         // Forward to Evolution API
-        const EVO_API_URL = 'http://localhost:8080';
+        const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
         const instName = instance || getDefaultInstanceName();
-        const key = 'SV-EvoApi-2026-ScholarVault!';
+        const key = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
         let apiSuccess = false;
         
         console.log(`[Sender] Dispatching base64 media message to ${jid} via Evolution API...`);
@@ -1932,8 +1932,8 @@ app.post('/api/validate-numbers', async (req, res) => {
     const defaultInstName = getDefaultInstanceName();
     const targetInstanceName = instanceName || defaultInstName;
     
-    let key = apiKey || 'SV-EvoApi-2026-ScholarVault!';
-    let EVO_API_URL = 'http://localhost:8080';
+    let key = apiKey || (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+    let EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
     if (Array.isArray(instances) && instances.length > 0) {
         const inst = instances.find(i => i.name === targetInstanceName) || instances[0];
         key = apiKey || inst.apiKey || key;
@@ -2238,7 +2238,7 @@ app.post('/api/unified-campaign', async (req, res) => {
                 const inst = instances.find(i => i.name === targetInstanceName);
                 if (inst) targetApiKey = inst.apiKey;
             }
-            if (!targetApiKey) targetApiKey = 'SV-EvoApi-2026-ScholarVault!';
+            if (!targetApiKey) targetApiKey = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
 
             campaigns[campId] = { 
                 name: `${name} [WA]`, 
@@ -2301,7 +2301,7 @@ async function autoStartEvolution() {
     
     try {
         // Check if Evolution API is already active
-        await axios.get('http://localhost:8080', { timeout: 2000 });
+        await axios.get((process.env.EVO_API_URL || 'http://localhost:8080'), { timeout: 2000 });
         console.log('[Auto-Start] Evolution API is already running on port 8080.');
     } catch (e) {
         // Port 8080 is offline, spawn a new instance
