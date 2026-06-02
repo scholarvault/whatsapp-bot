@@ -1262,7 +1262,10 @@
                     <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; color: var(--text-primary);"><i data-lucide="message-square" style="color: var(--accent);"></i> Chats</h3>
-                            <button class="btn btn-secondary btn-xs" onclick="loadInbox()" style="padding: 4px 8px; font-size: 11px;"><i data-lucide="refresh-cw" style="width:12px;height:12px;"></i></button>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-secondary btn-xs" onclick="openNewChatModal()" style="padding: 4px 8px; font-size: 11px; background: var(--accent); color: white;" title="Start New Chat"><i data-lucide="message-square-plus" style="width:12px;height:12px;"></i></button>
+                                <button class="btn btn-secondary btn-xs" onclick="loadInbox()" style="padding: 4px 8px; font-size: 11px;"><i data-lucide="refresh-cw" style="width:12px;height:12px;"></i></button>
+                            </div>
                         </div>
                         <!-- Search Bar -->
                         <div style="position: relative;">
@@ -1458,18 +1461,60 @@
                     <h3><i data-lucide="users"></i> Contact CRM</h3>
                 </div>
                 <div class="form-group" style="display:flex; justify-content:space-between; align-items:center;">
-                    <button class="btn btn-primary btn-sm" onclick="triggerCrmCsvUpload()"><i data-lucide="folder-up"></i> Import Contacts CSV</button>
-                    <input type="file" id="crmCsvFile" accept=".csv,.txt" style="display:none" onchange="handleCrmCSV(this)">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn btn-primary btn-sm" onclick="triggerCrmCsvUpload()"><i data-lucide="folder-up"></i> Import Contacts CSV</button>
+                        <input type="file" id="crmCsvFile" accept=".csv,.txt" style="display:none" onchange="handleCrmCSV(this)">
+                        <button class="btn btn-sm" onclick="openContactModal()" style="background: var(--accent); color: white; display:flex; align-items:center; gap:6px;"><i data-lucide="user-plus"></i> Add Contact</button>
+                    </div>
                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <tr><th>Name</th><th>Phone</th><th>Tags</th></tr>
+                            <tr><th>Name</th><th>Phone</th><th>Tags</th><th style="width:80px;">Actions</th></tr>
                         </thead>
                         <tbody id="contactsTableBody">
                             <tr><td colspan="3" class="text-center text-muted">CRM is empty.</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Add/Edit Modal -->
+        <div class="modal-overlay" id="contactModal" style="display:none;">
+            <div class="modal" style="max-width:480px;">
+                <div class="modal-header">
+                    <h3 id="contactModalTitle"><i data-lucide="user-plus"></i> Add Contact</h3>
+                    <button class="modal-close" onclick="closeContactModal()">✕</button>
+                </div>
+                <div class="form-group">
+                    <label>Full Name <span style="color:var(--danger);">*</span></label>
+                    <input type="text" class="form-input" id="contactModalName" placeholder="e.g. Dr. Arun Kumar">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (with country code) <span style="color:var(--danger);">*</span></label>
+                    <input type="text" class="form-input" id="contactModalPhone" placeholder="e.g. 919876543210">
+                    <div style="margin-top:4px; font-size:11px; color:var(--text-muted);">Enter digits only. Include country code (e.g. 91 for India).</div>
+                </div>
+                <div class="form-group">
+                    <label>Tags</label>
+                    <div id="contactModalTagsContainer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+                        <button type="button" class="btn btn-xs" onclick="toggleContactTag('Speaker')" style="font-size:11px; padding:4px 10px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); border-radius:20px; cursor:pointer;" data-tag-btn="Speaker">Speaker</button>
+                        <button type="button" class="btn btn-xs" onclick="toggleContactTag('Hot Lead')" style="font-size:11px; padding:4px 10px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); border-radius:20px; cursor:pointer;" data-tag-btn="Hot Lead">Hot Lead</button>
+                        <button type="button" class="btn btn-xs" onclick="toggleContactTag('OCM')" style="font-size:11px; padding:4px 10px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); border-radius:20px; cursor:pointer;" data-tag-btn="OCM">OCM</button>
+                        <button type="button" class="btn btn-xs" onclick="toggleContactTag('CFP Lead')" style="font-size:11px; padding:4px 10px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); border-radius:20px; cursor:pointer;" data-tag-btn="CFP Lead">CFP Lead</button>
+                        <button type="button" class="btn btn-xs" onclick="toggleContactTag('Listener')" style="font-size:11px; padding:4px 10px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); border-radius:20px; cursor:pointer;" data-tag-btn="Listener">Listener</button>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" class="form-input" id="contactModalCustomTag" placeholder="Type custom tag..." style="flex:1; height:32px; font-size:12px;">
+                        <button class="btn btn-secondary btn-xs" onclick="addCustomContactTag()" style="padding:4px 12px; font-size:11px;">+ Add</button>
+                    </div>
+                </div>
+                <input type="hidden" id="contactModalEditJid" value="">
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                    <button class="btn btn-secondary" onclick="closeContactModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveContact()" id="contactModalSaveBtn"><i data-lucide="save"></i> Save Contact</button>
                 </div>
             </div>
         </div>
@@ -4406,18 +4451,23 @@ async function loadContacts() {
         const data = await res.json();
         const tbody = document.getElementById('contactsTableBody');
         if (data.contacts && Object.keys(data.contacts).length > 0) {
-            tbody.innerHTML = Object.values(data.contacts).map(c => `
+            tbody.innerHTML = Object.values(data.contacts).map(c => {
+                const tagsHtml = (c.tags && c.tags.length > 0) 
+                    ? c.tags.map(t => `<span class="badge badge-info" style="margin-right:4px; font-size:10px;">${escapeHtml(t)}</span>`).join('') 
+                    : `<span class="badge badge-info" style="font-size:10px;">${c.group || 'Standard'}</span>`;
+                return `
                 <tr>
                     <td>${escapeHtml(c.name || 'Unknown')}</td>
                     <td>${c.jid.split('@')[0]}</td>
+                    <td>${tagsHtml}</td>
                     <td>
-                        <span class="badge badge-info" style="margin-right:10px;">${c.group || 'Standard'}</span>
-                        <button class="btn btn-sm" onclick="removeCrmContact('${c.jid}')" style="background:transparent; color:var(--danger); padding:4px;"><i data-lucide="trash-2"></i></button>
+                        <button class="btn btn-sm" onclick="openEditContact('${c.jid}')" style="background:transparent; color:var(--accent); padding:4px;" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="btn btn-sm" onclick="removeCrmContact('${c.jid}')" style="background:transparent; color:var(--danger); padding:4px;" title="Delete"><i data-lucide="trash-2"></i></button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         } else {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">CRM is empty.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">CRM is empty. Click "+ Add Contact" to get started.</td></tr>';
         }
         lucide.createIcons();
     } catch (e) {}
@@ -4441,6 +4491,235 @@ async function removeCrmContact(jid) {
     } catch (e) {
         toast('Failed to delete contact', 'error');
     }
+}
+
+// ═══════════════════════════════════════════════
+// CONTACT ADD/EDIT MODAL FUNCTIONS
+// ═══════════════════════════════════════════════
+let contactModalTags = [];
+
+function openContactModal() {
+    contactModalTags = [];
+    document.getElementById('contactModalName').value = '';
+    document.getElementById('contactModalPhone').value = '';
+    document.getElementById('contactModalPhone').disabled = false;
+    document.getElementById('contactModalEditJid').value = '';
+    document.getElementById('contactModalCustomTag').value = '';
+    document.getElementById('contactModalTitle').innerHTML = '<i data-lucide="user-plus"></i> Add Contact';
+    document.getElementById('contactModalSaveBtn').innerHTML = '<i data-lucide="save"></i> Save Contact';
+    renderContactModalTags();
+    resetTagButtons();
+    document.getElementById('contactModal').style.display = 'flex';
+    lucide.createIcons();
+}
+
+async function openEditContact(jid) {
+    try {
+        const res = await fetch('/api/contacts');
+        const data = await res.json();
+        const contact = data.contacts[jid];
+        if (!contact) { toast('Contact not found', 'error'); return; }
+        
+        contactModalTags = (contact.tags && contact.tags.length > 0) ? [...contact.tags] : (contact.group ? [contact.group] : []);
+        document.getElementById('contactModalName').value = contact.name || '';
+        document.getElementById('contactModalPhone').value = jid.split('@')[0];
+        document.getElementById('contactModalPhone').disabled = false;
+        document.getElementById('contactModalEditJid').value = jid;
+        document.getElementById('contactModalCustomTag').value = '';
+        document.getElementById('contactModalTitle').innerHTML = '<i data-lucide="pencil"></i> Edit Contact';
+        document.getElementById('contactModalSaveBtn').innerHTML = '<i data-lucide="save"></i> Update Contact';
+        renderContactModalTags();
+        resetTagButtons();
+        // Highlight active preset tags
+        contactModalTags.forEach(tag => {
+            const btn = document.querySelector(`[data-tag-btn="${tag}"]`);
+            if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--accent)'; }
+        });
+        document.getElementById('contactModal').style.display = 'flex';
+        lucide.createIcons();
+    } catch (e) {
+        toast('Failed to load contact', 'error');
+    }
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').style.display = 'none';
+}
+
+function toggleContactTag(tag) {
+    const idx = contactModalTags.indexOf(tag);
+    const btn = document.querySelector(`[data-tag-btn="${tag}"]`);
+    if (idx > -1) {
+        contactModalTags.splice(idx, 1);
+        if (btn) { btn.style.background = 'var(--bg-input)'; btn.style.color = 'var(--text-secondary)'; btn.style.borderColor = 'var(--border)'; }
+    } else {
+        contactModalTags.push(tag);
+        if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--accent)'; }
+    }
+    renderContactModalTags();
+}
+
+function addCustomContactTag() {
+    const input = document.getElementById('contactModalCustomTag');
+    const tag = input.value.trim();
+    if (!tag) return;
+    if (contactModalTags.includes(tag)) { toast('Tag already added', 'error'); return; }
+    contactModalTags.push(tag);
+    input.value = '';
+    renderContactModalTags();
+    // Highlight if it matches a preset button
+    const btn = document.querySelector(`[data-tag-btn="${tag}"]`);
+    if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--accent)'; }
+}
+
+function removeContactModalTag(tag) {
+    contactModalTags = contactModalTags.filter(t => t !== tag);
+    renderContactModalTags();
+    const btn = document.querySelector(`[data-tag-btn="${tag}"]`);
+    if (btn) { btn.style.background = 'var(--bg-input)'; btn.style.color = 'var(--text-secondary)'; btn.style.borderColor = 'var(--border)'; }
+}
+
+function resetTagButtons() {
+    document.querySelectorAll('[data-tag-btn]').forEach(btn => {
+        btn.style.background = 'var(--bg-input)'; btn.style.color = 'var(--text-secondary)'; btn.style.borderColor = 'var(--border)';
+    });
+}
+
+function renderContactModalTags() {
+    const container = document.getElementById('contactModalTagsContainer');
+    if (contactModalTags.length === 0) {
+        container.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">No tags selected</span>';
+        return;
+    }
+    container.innerHTML = contactModalTags.map(t => `
+        <span style="display:inline-flex; align-items:center; gap:4px; background:var(--accent); color:white; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500;">
+            ${escapeHtml(t)}
+            <span onclick="removeContactModalTag('${escapeHtml(t)}')" style="cursor:pointer; font-size:14px; line-height:1; opacity:0.8;">×</span>
+        </span>
+    `).join('');
+}
+
+async function saveContact() {
+    const name = document.getElementById('contactModalName').value.trim();
+    const phone = document.getElementById('contactModalPhone').value.trim().replace(/\D/g, '');
+    const editJid = document.getElementById('contactModalEditJid').value;
+    
+    if (!name) { toast('Name is required', 'error'); return; }
+    if (!phone || phone.length < 10) { toast('Valid phone number is required (min 10 digits with country code)', 'error'); return; }
+    
+    try {
+        if (editJid) {
+            // EDIT MODE
+            const res = await fetch(`/api/contacts/${encodeURIComponent(editJid)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, tags: contactModalTags })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('Contact updated successfully!', 'success');
+                closeContactModal();
+                loadContacts();
+            } else {
+                toast(data.message || 'Failed to update contact', 'error');
+            }
+        } else {
+            // ADD MODE
+            const res = await fetch('/api/contacts/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, tags: contactModalTags })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('Contact added successfully!', 'success');
+                closeContactModal();
+                loadContacts();
+            } else {
+                toast(data.message || 'Failed to add contact', 'error');
+            }
+        }
+    } catch (e) {
+        toast('Connection error', 'error');
+    }
+}
+
+// ═══════════════════════════════════════════════
+// NEW CHAT MODAL (Live Inbox)
+// ═══════════════════════════════════════════════
+function openNewChatModal() {
+    // Create a simple popup overlay for starting new chat
+    let existing = document.getElementById('newChatOverlay');
+    if (existing) existing.remove();
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'newChatOverlay';
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10,14,23,0.7); backdrop-filter:blur(4px); z-index:999; display:flex; align-items:center; justify-content:center;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    
+    overlay.innerHTML = `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:24px; width:420px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:16px; display:flex; align-items:center; gap:8px;"><i data-lucide="message-square-plus" style="width:18px;height:18px;color:var(--accent);"></i> New Chat</h3>
+                <button onclick="document.getElementById('newChatOverlay').remove()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; display:block;">Enter phone number (with country code)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="newChatPhoneInput" class="form-input" placeholder="e.g. 919876543210" style="flex:1; height:38px;">
+                    <button class="btn btn-primary btn-sm" onclick="startNewChat()" style="white-space:nowrap;"><i data-lucide="send" style="width:14px;height:14px;"></i> Open</button>
+                </div>
+            </div>
+            <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px;">
+                <label style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; display:block;">Or pick from Contact Book</label>
+                <div id="newChatContactList" style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+                    <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">Loading contacts...</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    lucide.createIcons();
+    
+    // Load contacts into the picker
+    fetch('/api/contacts').then(r => r.json()).then(data => {
+        const list = document.getElementById('newChatContactList');
+        if (!data.contacts || Object.keys(data.contacts).length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; padding:10px;">No contacts in Contact Book</div>';
+            return;
+        }
+        list.innerHTML = Object.values(data.contacts).map(c => `
+            <div onclick="startNewChatWith('${c.jid}', '${escapeHtml(c.name || 'Unknown')}')" 
+                 style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:background 0.2s; border:1px solid var(--border);"
+                 onmouseover="this.style.background='var(--bg-input)'" onmouseout="this.style.background='transparent'">
+                <div style="width:32px; height:32px; border-radius:50%; background:var(--gradient-1); display:flex; align-items:center; justify-content:center; font-weight:bold; color:white; font-size:12px; flex-shrink:0;">
+                    ${(c.name || '?').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}
+                </div>
+                <div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-primary);">${escapeHtml(c.name || 'Unknown')}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${c.jid.split('@')[0]}</div>
+                </div>
+            </div>
+        `).join('');
+    }).catch(() => {
+        document.getElementById('newChatContactList').innerHTML = '<div style="text-align:center; color:var(--danger); font-size:12px; padding:10px;">Failed to load contacts</div>';
+    });
+}
+
+function startNewChat() {
+    const phone = document.getElementById('newChatPhoneInput').value.trim().replace(/\D/g, '');
+    if (!phone || phone.length < 10) { toast('Enter a valid phone number', 'error'); return; }
+    const jid = phone + '@s.whatsapp.net';
+    const overlay = document.getElementById('newChatOverlay');
+    if (overlay) overlay.remove();
+    selectChat(jid, phone);
+}
+
+function startNewChatWith(jid, name) {
+    const overlay = document.getElementById('newChatOverlay');
+    if (overlay) overlay.remove();
+    selectChat(jid, name);
 }
 
 // Inbox auto-refresh polling (15s when on inbox page)

@@ -939,6 +939,49 @@ app.post('/api/contacts', (req, res) => {
     res.json({ success: true });
 });
 
+// Add a single contact
+app.post('/api/contacts/add', (req, res) => {
+    const { name, phone, tags } = req.body;
+    if (!name || !phone) return res.status(400).json({ success: false, message: 'Name and phone are required' });
+
+    const jid = phone.replace(/\D/g, '') + '@s.whatsapp.net';
+    let contacts = getDb('contacts');
+    if (contacts[jid]) return res.status(409).json({ success: false, message: 'Contact already exists' });
+
+    contacts[jid] = {
+        jid,
+        name,
+        tags: Array.isArray(tags) ? tags : [],
+        addedAt: new Date().toISOString(),
+        leadStatus: 'New'
+    };
+    saveDb('contacts', contacts);
+    res.json({ success: true, jid });
+});
+
+// Edit an existing contact
+app.put('/api/contacts/:jid', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const { name, phone, tags } = req.body;
+    let contacts = getDb('contacts');
+
+    if (!contacts[jid]) return res.status(404).json({ success: false, message: 'Contact not found' });
+
+    const newJid = phone ? phone.replace(/\D/g, '') + '@s.whatsapp.net' : jid;
+
+    if (newJid !== jid) {
+        // Phone number changed — migrate to new JID
+        contacts[newJid] = { ...contacts[jid], jid: newJid };
+        delete contacts[jid];
+    }
+
+    if (name !== undefined) contacts[newJid].name = name;
+    if (tags !== undefined) contacts[newJid].tags = Array.isArray(tags) ? tags : [];
+
+    saveDb('contacts', contacts);
+    res.json({ success: true, jid: newJid });
+});
+
 // Blacklist APIs
 app.get('/api/blacklist', (req, res) => res.json({ success: true, blacklist: getDb('blacklist') }));
 app.post('/api/blacklist', (req, res) => {
@@ -1747,6 +1790,27 @@ app.post('/api/inbox/:jid/reply', async (req, res) => {
     
     // We pass skipDelay = true and senderType = 'agent' so manual replies are sent instantly and logged automatically in sendSmartMessage
     const success = await sendSmartMessage(jid, instance || getDefaultInstanceName(), message, null, null, true, 'agent');
+
+    // Update inbox so outbound messages appear in the chat list sidebar
+    if (success) {
+        let inboxDb = getDb('inbox');
+        const contacts = getDb('contacts');
+        const existingIdx = inboxDb.findIndex(m => m.jid === jid);
+        if (existingIdx !== -1) {
+            inboxDb[existingIdx].message = 'You: ' + message;
+            inboxDb[existingIdx].timestamp = new Date().toISOString();
+        } else {
+            inboxDb.unshift({
+                jid,
+                name: contacts[jid]?.name || jid.split('@')[0],
+                message: 'You: ' + message,
+                timestamp: new Date().toISOString(),
+                sentiment: 'Neutral'
+            });
+        }
+        saveDb('inbox', inboxDb);
+    }
+
     res.json({ success });
 });
 
