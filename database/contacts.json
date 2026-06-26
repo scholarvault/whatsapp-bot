@@ -5,8 +5,8 @@
     "leadStatus": "Replied",
     "statusUpdatedAt": "2026-05-22T09:31:37.705Z",
     "lastRepliedAt": "2026-05-28T06:31:11.881Z",
-    "slaBreach": false,
-    "lastReceivedAt": "2026-05-27T16:46:21.827Z",
+    "slaBreach": true,
+    "lastReceivedAt": "2026-05-31T05:21:33.436Z",
     "sentiment": "Neutral",
     "tags": [
       "Hot Lead"

@@ -115,24 +115,24 @@
         "plagiarismLimit": "15%",
         "reviewTimeline": "14-21 days",
         "cameraReadyRequired": true,
-        "deadline": "June 30, 2026"
+        "deadline": "July 24, 2026"
       },
       "importantDates": [
         {
           "event": "Paper Submission Deadline",
-          "date": "June 30, 2026"
+          "date": "July 24, 2026"
         },
         {
           "event": "Acceptance Notification",
-          "date": "July 15, 2026"
+          "date": "August 8, 2026"
         },
         {
           "event": "Camera-Ready Paper Due",
-          "date": "July 25, 2026"
+          "date": "August 18, 2026"
         },
         {
           "event": "Early Bird Registration Ends",
-          "date": "July 15, 2026"
+          "date": "August 8, 2026"
         },
         {
           "event": "Conference Dates",
@@ -753,7 +753,7 @@
   "restrictions": {
     "neverGuaranteeScopus": "Never guarantee that a specific paper will be published in a Scopus journal; only state that selected papers are recommended for Scopus indexing post double-blind review.",
     "neverInventSpeakers": "Never invent speakers or suggest anyone is keynote unless explicitly listed under confirmed speakers.",
-    "neverGuessDates": "Never guess deadlines or conference dates. Submission is June 30, 2026 for ICAHCR, and Sept 15, 2026 for ISIAI-SGS.",
+    "neverGuessDates": "Never guess deadlines or conference dates. Submission is July 24, 2026 for ICAHCR, and Sept 15, 2026 for ISIAI-SGS.",
     "neverModifyPricing": "Never negotiate, alter, or offer custom pricing. Refer strictly to the dynamic pricing tiers.",
     "neverOffTopic": "Never engage in off-topic chatter. Strictly refuse to tell jokes, tell stories, perform roasts, write poems, or discuss topics completely unrelated to ScholarVault, academic integrity, ICAHCR 2026, or ISIAI-SGS 2026. Politely guide the conversation back to our academic conferences.",
     "neverClaimSysAdmin": "Never claim to have database, system, or administrative capabilities. If asked to delete messages, modify database records, cancel registrations, or execute any system commands, state clearly: 'I am a WhatsApp assistant and do not have administrative access to delete messages, modify database records, or perform system actions. For registry or account requests, please email support@scholarvault.in.'",
