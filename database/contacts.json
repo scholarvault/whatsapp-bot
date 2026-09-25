@@ -661,7 +661,7 @@
     "slaBreach": true,
     "leadStatus": "Replied",
     "statusUpdatedAt": "2026-08-12T19:20:42.000Z",
-    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/620477620_2154058402115399_3426812539998767378_n.jpg?ccb=11-4&oh=01_Q5Aa5QHkVng13HatfhK4Uq2KOPYSphw2u0L0fidOXwEExL3Ifg&oe=6A89E5DF&_nc_sid=5e03e0&_nc_cat=103"
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/620477620_2154058402115399_3426812539998767378_n.jpg?ccb=11-4&oh=01_Q5Aa5gEE2BIsz14_3qt-UnlK29pKLkd-HUUo3Tek1lwIfUI7Zg&oe=6AC33F1F&_nc_sid=5e03e0&_nc_cat=103"
   },
   "60173506610@s.whatsapp.net": {
     "jid": "60173506610@s.whatsapp.net",
@@ -704,12 +704,15 @@
     "jid": "219206557683955@lid"
   },
   "447974905090@s.whatsapp.net": {
-    "jid": "447974905090@s.whatsapp.net"
+    "jid": "447974905090@s.whatsapp.net",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/375824181_1039251787081640_917111487766900129_n.jpg?ccb=11-4&oh=01_Q5Aa5gEneExwr6yyjREe8XV5meDi7pcOeADpBBkbqJ03NYDhzw&oe=6AC34886&_nc_sid=5e03e0&_nc_cat=105"
   },
   "918105749018@s.whatsapp.net": {
-    "jid": "918105749018@s.whatsapp.net"
+    "jid": "918105749018@s.whatsapp.net",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/464747819_1091295642666874_3697518010995434830_n.jpg?ccb=11-4&oh=01_Q5Aa5gE-s2MNrqfHKY5f0bQcFT0f0LTogkfqUUhbfRK6zmPCyw&oe=6AC3384C&_nc_sid=5e03e0&_nc_cat=104"
   },
   "18668392077@s.whatsapp.net": {
-    "jid": "18668392077@s.whatsapp.net"
+    "jid": "18668392077@s.whatsapp.net",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/432510490_937531834947247_4787788416108579972_n.jpg?ccb=11-4&oh=01_Q5Aa5gFCMNK0JI7wW9VT8iDoxkWoTwX7VD2OL8CZvsHJ7NxWsw&oe=6AC33532&_nc_sid=5e03e0&_nc_cat=111"
   }
 }

@@ -43,10 +43,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:31:06.000Z",
       "messageId": "3EB0671A71CFB5F98C52FD",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "918977082003@s.whatsapp.net": [
@@ -93,10 +94,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:31:24.000Z",
       "messageId": "3EB0FE784252A464AEBC24",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "919445669777@s.whatsapp.net": [
@@ -142,9 +144,11 @@
       "fromMe": true,
       "direction": "out",
       "text": "I understand your strict requirements—only physical conferences with Scopus indexing are acceptable.\n\nUnfortunately, **ScholarVault’s upcoming conferences (ICAHCR 2026 and ISIAI-SGS 2026) are 100% virtual** to ensure global accessibility and eliminate travel barriers. We do not currently offer physical conferences.\n\nHowever, I can connect you with our team to explore **future physical conference plans** or help verify if any other trusted conferences meet your criteria. Let me escalate this for you:\n\n📩 **Email:** conferences@scholarvault.in\n📞 **Call/WhatsApp:** +91-86101-00624\n\nThey’ll respond shortly with options or guidance.\n\n— ScholarVault Team",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
-      "timestamp": "2026-08-08T10:10:05.000Z"
+      "timestamp": "2026-08-08T10:10:05.000Z",
+      "mediaType": null,
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -159,8 +163,10 @@
       "direction": "in",
       "text": "Media/System Message",
       "messageType": "text",
-      "name": "Sathyamoorthy Ramachandran",
-      "timestamp": "2026-08-08T10:11:24.000Z"
+      "name": "Goodrich Ingredients",
+      "timestamp": "2026-08-08T10:11:24.000Z",
+      "mediaType": null,
+      "status": "READ"
     }
   ],
   "918125269599@s.whatsapp.net": [
@@ -207,10 +213,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "SENT",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:31:45.000Z",
       "messageId": "3EB0492568EE4926E48582",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "919492046714@s.whatsapp.net": [
@@ -257,10 +264,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "SENT",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:32:04.000Z",
       "messageId": "3EB0E2F953F1073A9BDC80",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "917013748737@s.whatsapp.net": [
@@ -307,10 +315,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "SENT",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:32:24.000Z",
       "messageId": "3EB08766E44EA7C63B6693",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "918870823807@s.whatsapp.net": [
@@ -357,10 +366,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "SENT",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:32:43.000Z",
       "messageId": "3EB0E0396E2745CD8F86CB",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "917049226830@s.whatsapp.net": [
@@ -407,10 +417,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:33:01.000Z",
       "messageId": "3EB09772D636DADC6C7877",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "919381316218@s.whatsapp.net": [
@@ -457,10 +468,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "SENT",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:33:20.000Z",
       "messageId": "3EB06BFB34B6382E1CDDB1",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "917013931599@s.whatsapp.net": [
@@ -507,10 +519,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:33:39.000Z",
       "messageId": "3EB0158E200C56F621C28A",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "918977814617@s.whatsapp.net": [
@@ -592,27 +605,29 @@
       "fromMe": true,
       "direction": "out",
       "text": "Hi , do you need any help in securing the slot ?",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
       "sentiment": "Urgent",
-      "status": "PENDING",
+      "status": "DELIVERED",
       "timestamp": "2026-08-15T04:08:22.000Z",
-      "messageId": "2AF59B997CCB57D0BBE5"
+      "messageId": "2AF59B997CCB57D0BBE5",
+      "mediaType": null
     },
     {
       "id": "3EB00B68644F5B98AB600F",
       "fromMe": true,
       "direction": "out",
       "text": "Hi , Last 5 Days to secure your slot , Let me know if you are interested to secure the slot",
-      "messageType": "conversation",
+      "messageType": "text",
       "pollQuestion": null,
       "pollOptions": null,
       "senderType": "agent",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-17T15:20:19.000Z",
       "name": "Me",
       "sentiment": "Urgent",
-      "messageId": "3EB00B68644F5B98AB600F"
+      "messageId": "3EB00B68644F5B98AB600F",
+      "mediaType": null
     }
   ],
   "919391216661@s.whatsapp.net": [
@@ -706,19 +721,20 @@
       "fromMe": true,
       "direction": "out",
       "text": "Hi , do you need any help in securing the slot ?",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
       "sentiment": "Urgent",
-      "status": "PENDING",
+      "status": "DELIVERED",
       "timestamp": "2026-08-15T04:08:07.000Z",
-      "messageId": "2A986A8337251DFF68A4"
+      "messageId": "2A986A8337251DFF68A4",
+      "mediaType": null
     },
     {
       "id": "3EB0C0CE23A332367C49DE",
       "fromMe": true,
       "direction": "out",
       "text": "Hi , Last 5 Days to secure your slot , Let me know if you are interested to secure the slot",
-      "messageType": "conversation",
+      "messageType": "text",
       "pollQuestion": null,
       "pollOptions": null,
       "senderType": "agent",
@@ -726,7 +742,8 @@
       "timestamp": "2026-08-17T15:20:07.000Z",
       "name": "Me",
       "sentiment": "Urgent",
-      "messageId": "3EB0C0CE23A332367C49DE"
+      "messageId": "3EB0C0CE23A332367C49DE",
+      "mediaType": null
     }
   ],
   "919999417377@s.whatsapp.net": [
@@ -773,10 +790,11 @@
         "Looking for a discount/grant"
       ],
       "senderType": "campaign",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-12T19:34:34.000Z",
       "messageId": "3EB00FD14D528116612BFA",
-      "name": "Me"
+      "name": "Me",
+      "mediaType": null
     }
   ],
   "201065730335@s.whatsapp.net": [
@@ -785,10 +803,12 @@
       "messageId": "3EB0B9578BB81FF103EC8C",
       "fromMe": true,
       "direction": "out",
-      "text": "Hi Heba Gad 👋,\n\nGreat news from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
+      "text": "📷 Image: Hi Heba Gad 👋,\n\nGreat news from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:27:57.000Z"
+      "timestamp": "2026-08-08T09:27:57.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -806,10 +826,12 @@
       "messageId": "3EB0D63D0DE0924C397DD8",
       "fromMe": true,
       "direction": "out",
-      "text": "Hi S. THAYANDHI 👋,\n\nExciting update from the *AI Health Conference*!\n\nTime is running out — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nBest regards,\nThe ScholarVault Team",
+      "text": "📷 Image: Hi S. THAYANDHI 👋,\n\nExciting update from the *AI Health Conference*!\n\nTime is running out — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nBest regards,\nThe ScholarVault Team",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:28:19.000Z"
+      "timestamp": "2026-08-08T09:28:19.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -827,10 +849,12 @@
       "messageId": "3EB0573C5AB5B875DB2A7A",
       "fromMe": true,
       "direction": "out",
-      "text": "Hi Nishi Miteshkumar Doshi 👋,\n\nExciting update from the *AI Health Conference*!\n\nTime is running out — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nJoin us at *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nBest regards,\nTeam ScholarVault",
+      "text": "📷 Image: Hi Nishi Miteshkumar Doshi 👋,\n\nExciting update from the *AI Health Conference*!\n\nTime is running out — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nJoin us at *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nBest regards,\nTeam ScholarVault",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:28:40.000Z"
+      "timestamp": "2026-08-08T09:28:40.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -848,10 +872,12 @@
       "messageId": "3EB0B8EC070B88B464895E",
       "fromMe": true,
       "direction": "out",
-      "text": "Dear Prasannakumar Subhash Patil 👋,\n\nGreat news from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
+      "text": "📷 Image: Dear Prasannakumar Subhash Patil 👋,\n\nGreat news from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:29:15.000Z"
+      "timestamp": "2026-08-08T09:29:15.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -1125,11 +1151,11 @@
       "fromMe": true,
       "direction": "out",
       "text": "ICAHCR 2026 — Virtual Conference Joining Details\n\nGreetings from ScholarVault.\n\nYou are invited to attend:\nICAHCR 2026 — International Conference on AI in Healthcare\n📅 Date: Saturday, 22 August 2026\n🕘 Time: 9:00 AM–3:00 PM IST\n 1:50 PM – 2:20 PM Presentation Timing it can be sooner based on Availability\n\n💻 Platform: Zoom  \n🔗 Join the Conference:\nhttps://us06web.zoom.us/j/81194626713?pwd=vcStPNYUYQGcXk0wQ4N1Sjn6anON19.1\nMeeting ID: 811 9462 6713\nPasscode: 877466\n\nImportant Instructions:\n\n• Join using your full name and institutional affiliation.\n• Keep your microphone muted , if you want to speak you can unmute, but remaining time keep muted so it will maintain conference decorum\n• Please use a stable internet connection and preferably join from a laptop or desktop.\n• Do not share these meeting credentials publicly.\nWe look forward to your participation.\n\nWarm regards,\nConference Team",
-      "messageType": "conversation",
+      "messageType": "text",
       "pollQuestion": null,
       "pollOptions": null,
       "senderType": "agent",
-      "status": "READ",
+      "status": "PENDING",
       "timestamp": "2026-08-20T11:54:01.000Z",
       "name": "Me",
       "sentiment": "Positive",
@@ -1234,9 +1260,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Ok sir.",
-      "messageType": "conversation",
-      "name": "Nikita Teli",
-      "timestamp": "2026-08-29T10:51:36.000Z"
+      "messageType": "text",
+      "name": "Nikita Joshi",
+      "timestamp": "2026-08-29T10:51:36.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "918341485222@s.whatsapp.net": [
@@ -1245,10 +1273,12 @@
       "messageId": "3EB0855853E9A4FF818F17",
       "fromMe": true,
       "direction": "out",
-      "text": "Dear Juvvala Sailaja 👋,\n\nExciting update from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nWarm wishes,\nThe ScholarVault Team",
+      "text": "📷 Image: Dear Juvvala Sailaja 👋,\n\nExciting update from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nWarm wishes,\nThe ScholarVault Team",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:29:56.000Z"
+      "timestamp": "2026-08-08T09:29:56.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -1266,10 +1296,12 @@
       "messageId": "3EB0B87ADF3D0891DCDA10",
       "fromMe": true,
       "direction": "out",
-      "text": "Hello krishna manohar 👋,\n\nExciting update from the *AI Health Conference*!\n\nHurry — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nJoin us at *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nWarm wishes,\nTeam ScholarVault",
+      "text": "📷 Image: Hello krishna manohar 👋,\n\nExciting update from the *AI Health Conference*!\n\nHurry — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nJoin us at *India's First Verified Academic Conference* — not another conference mill.\n\nLooking forward to seeing you!\n\nWarm wishes,\nTeam ScholarVault",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:30:17.000Z"
+      "timestamp": "2026-08-08T09:30:17.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -1287,10 +1319,12 @@
       "messageId": "3EB0BE1F9BBA1D9CC3BFF8",
       "fromMe": true,
       "direction": "out",
-      "text": "Hello McCauley Ashu Obenembot 👋,\n\nGreat news from the *AI Health Conference*!\n\nHurry — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
+      "text": "📷 Image: Hello McCauley Ashu Obenembot 👋,\n\nGreat news from the *AI Health Conference*!\n\nHurry — our *Early Bird Registration* ends on *August 8, 2026*. Secure your spot now at the discounted rate!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Just 6 days remaining to submit your paper!\n\nBe part of *India's First Verified Academic Conference* — not another conference mill.\n\nWe can't wait to welcome you!\n\nWarm wishes,\nThe ScholarVault Team",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:30:39.000Z"
+      "timestamp": "2026-08-08T09:30:39.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -1308,10 +1342,12 @@
       "messageId": "3EB09CEE76B7ED4CC8CC02",
       "fromMe": true,
       "direction": "out",
-      "text": "Hi unnatii ammale 👋,\n\nExciting update from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — a trusted platform for genuine academic growth.\n\nWe can't wait to welcome you!\n\nBest regards,\nTeam ScholarVault",
+      "text": "📷 Image: Hi unnatii ammale 👋,\n\nExciting update from the *AI Health Conference*!\n\nAct fast — our *Early Bird Registration* ends on *August 8, 2026*. Take advantage of the special rate and register today!\n\n📅 *Conference Dates:* August 22–23, 2026\n🔗 *Register Here:* https://www.scholarvault.in/register\n\n⚠️ *Reminder:* The Paper Submission Deadline is *August 14, 2026*. Only 6 days left to submit!\n\nBe part of *India's First Verified Academic Conference* — a trusted platform for genuine academic growth.\n\nWe can't wait to welcome you!\n\nBest regards,\nTeam ScholarVault",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-08-08T09:30:59.000Z"
+      "timestamp": "2026-08-08T09:30:59.000Z",
+      "mediaType": "image",
+      "status": "PENDING"
     },
     {
       "direction": "out",
@@ -2386,11 +2422,11 @@
       "fromMe": true,
       "direction": "out",
       "text": "ICAHCR 2026 — Virtual Conference Joining Details\n\nGreetings from ScholarVault.\n\nYou are invited to attend:\nICAHCR 2026 — International Conference on AI in Healthcare\n📅 Date: Saturday, 22 August 2026\n🕘 Time: 9:00 AM–3:00 PM IST\n\n💻 Platform: Zoom  \n🔗 Join the Conference:\nhttps://us06web.zoom.us/j/81194626713?pwd=vcStPNYUYQGcXk0wQ4N1Sjn6anON19.1\nMeeting ID: 811 9462 6713\nPasscode: 877466\n\nWe look forward to your participation.\n\nWarm regards,\nConference Team",
-      "messageType": "conversation",
+      "messageType": "text",
       "pollQuestion": null,
       "pollOptions": null,
       "senderType": "agent",
-      "status": "READ",
+      "status": "PENDING",
       "timestamp": "2026-08-20T11:55:30.000Z",
       "name": "Me",
       "sentiment": "Positive",
@@ -2888,9 +2924,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Ok, I will share to others",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Dr. Wu Yuan Seng",
-      "timestamp": "2026-09-16T06:35:31.000Z"
+      "timestamp": "2026-09-16T06:35:31.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "918489231225@s.whatsapp.net": [
@@ -3070,9 +3108,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Okk",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Monish",
-      "timestamp": "2026-08-10T04:12:15.000Z"
+      "timestamp": "2026-08-10T04:12:15.000Z",
+      "mediaType": null,
+      "status": "READ"
     },
     {
       "direction": "in",
@@ -3322,12 +3362,14 @@
       "id": "3EB0EAE4A4EB1423585890",
       "fromMe": true,
       "direction": "out",
-      "text": "Perfect! 😊 Visit: https://aihealth.scholarvault.in",
-      "messageType": "conversation",
+      "text": "Media/System Message",
+      "messageType": "text",
       "name": "Me",
       "sentiment": "Neutral",
       "status": "PENDING",
-      "timestamp": "2026-08-11T11:31:25.965Z"
+      "timestamp": "2026-08-11T12:10:39.000Z",
+      "messageId": "3EB0EAE4A4EB1423585890",
+      "mediaType": null
     },
     {
       "id": "3EB0EAE4A4EB1423585890",
@@ -3384,12 +3426,13 @@
       "fromMe": true,
       "direction": "out",
       "text": "Sure sir , informed technical team and they will remove tomorrow and i will send removed confirmation to you",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
       "sentiment": "Negative",
-      "status": "PENDING",
+      "status": "READ",
       "timestamp": "2026-08-11T19:23:55.000Z",
-      "messageId": "2A91B8A946AD5C3740BC"
+      "messageId": "2A91B8A946AD5C3740BC",
+      "mediaType": null
     }
   ],
   "918610100624@s.whatsapp.net": [
@@ -3453,7 +3496,8 @@
       "text": "Great! 👋\n\nShyam, you're a student at SRM University interested in AI in Healthcare. To help you best, could you tell me:\n\n1. Are you planning to present a paper or just attend the conference?\n2. Which specific area of AI in Healthcare are you interested in? (e.g., Diagnostics, Drug Discovery, Telemedicine, etc.)",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-28T19:05:39.000Z"
+      "timestamp": "2026-05-28T19:05:39.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3A773061D0A323842563",
@@ -3473,7 +3517,8 @@
       "text": "Hi Shyam! 👋\n\nGreat to meet you! You're interested in just attending the conference, right?",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-28T19:06:06.000Z"
+      "timestamp": "2026-05-28T19:06:06.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3A89710394F997A9068D",
@@ -3493,7 +3538,8 @@
       "text": "Great to hear! 🎉\n\n*ICAHCR 2026* Full Details:\n📅 August 22–23, 2026\n📍 100% Virtual / Online\n🔗 Register: https://aihealth.scholarvault.in\n\nLooking forward to having you! Any questions? We're here.",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-28T19:07:20.000Z"
+      "timestamp": "2026-05-28T19:07:20.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3AAAD8F533F3DE368C9A",
@@ -3523,7 +3569,8 @@
       "text": "Hello! 🌟\n\nHow may I assist you today?",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-28T21:18:07.000Z"
+      "timestamp": "2026-05-28T21:18:07.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3A78F438221884728F08",
@@ -3543,7 +3590,8 @@
       "text": "Hi there! 🌟\n\nWelcome to ScholarVault! We're here to help you connect, publish, and grow in the academic world.\n\nTo get started, could you please tell me what's your role in the academic or research community? Are you a:\n\n1️⃣ Faculty / Professor\n2️⃣ PhD Scholar / Researcher\n3️⃣ UG / PG Student\n4️⃣ Industry Professional\n5️⃣ Other (please specify)",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-28T22:17:50.000Z"
+      "timestamp": "2026-05-28T22:17:50.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3A73915131AB20D92F79",
@@ -3563,7 +3611,8 @@
       "text": "Welcome to ScholarVault! 🌟\n\nTo get started, could you please tell me what's your role in the academic or research community? Are you a:\n\n1️⃣ Faculty / Professor\n2️⃣ PhD Scholar / Researcher\n3️⃣ UG / PG Student\n4️⃣ Industry Professional\n5️⃣ Other (please specify)",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-30T15:46:27.000Z"
+      "timestamp": "2026-05-30T15:46:27.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "3AE13B9EB2F988D111F6",
@@ -3583,7 +3632,8 @@
       "text": "Welcome to ScholarVault! 🌟\n\nAs a professor, you might be interested in:\n\n1️⃣ Presenting a paper\n2️⃣ Attending as a listener\n3️⃣ Publication opportunities\n4️⃣ Keynote / speaker opportunities\n\nWhich one are you interested in?",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-05-30T15:46:49.000Z"
+      "timestamp": "2026-05-30T15:46:49.000Z",
+      "status": "DELIVERED"
     },
     {
       "id": "2AF10835586E1621ECC9",
@@ -3637,7 +3687,8 @@
       "text": "How to register",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:50:57.000Z"
+      "timestamp": "2026-08-08T08:50:57.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0C95648192B0530C18E",
@@ -3661,7 +3712,8 @@
       "text": "When is the conference ?",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:52:32.000Z"
+      "timestamp": "2026-08-08T08:52:32.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0C01D1976EB11306928",
@@ -3685,7 +3737,8 @@
       "text": "Tell me a conference joke",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:54:24.000Z"
+      "timestamp": "2026-08-08T08:54:24.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0653D0BA33F3DB373A3",
@@ -3709,7 +3762,8 @@
       "text": "Can you give me discount?",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:55:02.000Z"
+      "timestamp": "2026-08-08T08:55:02.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB03676A0CFAC27573088",
@@ -3733,7 +3787,8 @@
       "text": "The prices in the website shows 2500 for Student but you are saying different ?",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:55:58.000Z"
+      "timestamp": "2026-08-08T08:55:58.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0093DA094006ACD6315",
@@ -3757,7 +3812,8 @@
       "text": "July is over you are usinf outdated dates can you check real website",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T08:56:51.000Z"
+      "timestamp": "2026-08-08T08:56:51.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0682413A1A49A6254C3",
@@ -3795,7 +3851,8 @@
       "text": "Only physical conference and Scopous indexed . These conditions are non negotiable . Only well reputed universitties can provide . Anonymousel websites onlune agencies cannot provide and they dibt have energy to process in depth. Else bye",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-08T10:30:26.000Z"
+      "timestamp": "2026-08-08T10:30:26.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0BBADFA0AFF454EBBD1",
@@ -3973,7 +4030,8 @@
       "text": "Hi",
       "messageType": "conversation",
       "name": "Me",
-      "timestamp": "2026-08-11T16:26:54.000Z"
+      "timestamp": "2026-08-11T16:26:54.000Z",
+      "status": "READ"
     },
     {
       "id": "3A3EA14A61E29F4F8924",
@@ -3983,7 +4041,8 @@
       "text": "Yes",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-11T16:27:14.000Z"
+      "timestamp": "2026-08-11T16:27:14.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB0E56B0C909BDA9987FA",
@@ -4049,7 +4108,8 @@
       "text": "Yes",
       "messageType": "conversation",
       "name": "Shyam Sundar R",
-      "timestamp": "2026-08-11T17:09:49.000Z"
+      "timestamp": "2026-08-11T17:09:49.000Z",
+      "status": "READ"
     },
     {
       "id": "3EB033AE95B1F0E151172D",
@@ -4077,7 +4137,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-11T17:20:22.000Z"
+      "timestamp": "2026-08-11T17:20:22.000Z",
+      "reaction": "👍"
     },
     {
       "id": "3EB0E143C83014AA9E4915",
@@ -4091,7 +4152,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-11T17:39:48.000Z"
+      "timestamp": "2026-08-11T17:39:48.000Z",
+      "reaction": "👍"
     },
     {
       "id": "3EB0740EAE2BE9410B5472",
@@ -4105,7 +4167,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-11T18:07:27.000Z"
+      "timestamp": "2026-08-11T18:07:27.000Z",
+      "reaction": "❤️"
     },
     {
       "id": "3EB016B3EA96AB0CCA1C65",
@@ -4119,7 +4182,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-11T18:11:26.000Z"
+      "timestamp": "2026-08-11T18:11:26.000Z",
+      "reaction": "😢"
     },
     {
       "id": "3EB02DCD4CF1B691C61874",
@@ -4147,7 +4211,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-12T08:54:46.000Z"
+      "timestamp": "2026-08-12T08:54:46.000Z",
+      "reaction": "❤️"
     },
     {
       "id": "3EB01EDE3B5FB40AFB2AD3",
@@ -4175,7 +4240,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-12T11:12:56.000Z"
+      "timestamp": "2026-08-12T11:12:56.000Z",
+      "reaction": "❤️"
     },
     {
       "id": "3EB03264B8C8324D14FD52",
@@ -4245,7 +4311,8 @@
       "fileName": null,
       "name": "Me",
       "status": "READ",
-      "timestamp": "2026-08-12T16:26:33.000Z"
+      "timestamp": "2026-08-12T16:26:33.000Z",
+      "reaction": "😂"
     },
     {
       "id": "3EB0A85A8583518E658A6F",
@@ -4269,7 +4336,7 @@
       "messageType": "conversation",
       "name": "Me",
       "sentiment": "Positive",
-      "status": "PENDING",
+      "status": "READ",
       "timestamp": "2026-08-12T18:10:38.000Z",
       "messageId": "2A1F20365DDAA0EFA82A"
     },
@@ -4309,10 +4376,12 @@
       "messageId": "2A6EDB82ED3F2979D411",
       "fromMe": true,
       "direction": "out",
-      "text": "‎Scan my UPI QR code to pay with any UPI payment app.",
+      "text": "📷 Image: ‎Scan my UPI QR code to pay with any UPI payment app.",
       "messageType": "image",
       "name": "Me",
-      "timestamp": "2026-09-16T06:25:14.000Z"
+      "timestamp": "2026-09-16T06:25:14.000Z",
+      "mediaType": "image",
+      "status": "READ"
     },
     {
       "id": "3EB02395C17033FF3962E7",
@@ -4589,12 +4658,13 @@
       "fromMe": true,
       "direction": "out",
       "text": "https://aihealth.scholarvault.in/register",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
       "sentiment": "Neutral",
-      "status": "PENDING",
+      "status": "SENT",
       "timestamp": "2026-08-12T19:21:12.000Z",
-      "messageId": "2AEE463F045B68254C0C"
+      "messageId": "2AEE463F045B68254C0C",
+      "mediaType": null
     }
   ],
   "60173506610@s.whatsapp.net": [
@@ -4729,15 +4799,16 @@
       "fromMe": true,
       "direction": "out",
       "text": "ICAHCR 2026 — Virtual Conference Joining Details\n\nGreetings from ScholarVault.\n\nYou are invited to attend:\nICAHCR 2026 — International Conference on AI in Healthcare\n📅 Date: Saturday, 22 August 2026\n🕘 Time: 9:00 AM–3:00 PM IST\n\n💻 Platform: Zoom  \n🔗 Join the Conference:\nhttps://us06web.zoom.us/j/81194626713?pwd=vcStPNYUYQGcXk0wQ4N1Sjn6anON19.1\nMeeting ID: 811 9462 6713\nPasscode: 877466\n\nWe look forward to your participation.\n\nWarm regards,\nConference Team",
-      "messageType": "conversation",
+      "messageType": "text",
       "pollQuestion": null,
       "pollOptions": null,
       "senderType": "agent",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "timestamp": "2026-08-20T11:55:38.000Z",
       "name": "Me",
       "sentiment": "Positive",
-      "messageId": "3EB09B00FF3EC02E828E48"
+      "messageId": "3EB09B00FF3EC02E828E48",
+      "mediaType": null
     },
     {
       "id": "2AA93999DFA6F2D58013",
@@ -4895,9 +4966,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Well received \nThank you",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Assoc. Prof. Ts. Dr. Iman Farshchi",
-      "timestamp": "2026-08-25T13:41:38.000Z"
+      "timestamp": "2026-08-25T13:41:38.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "918714700160@s.whatsapp.net": [
@@ -4923,7 +4996,7 @@
       "id": "3EB0E42E14F761D60696F2",
       "fromMe": true,
       "direction": "out",
-      "text": "This is the Virtual Background you can use sir",
+      "text": "📷 Image: This is the Virtual Background you can use sir",
       "mediaUrl": null,
       "mediaType": "image",
       "fileName": null,
@@ -4932,7 +5005,7 @@
       "messageType": "image",
       "name": "Me",
       "sentiment": "Neutral",
-      "status": "DELIVERED",
+      "status": "PENDING",
       "messageId": "3EB0E42E14F761D60696F2"
     },
     {
@@ -4993,9 +5066,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Thank you for the invitation and yeah sure. I would love to work with the team continuously.",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "918714700160",
-      "timestamp": "2026-08-25T14:00:45.000Z"
+      "timestamp": "2026-08-25T14:00:45.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "80286427668520@lid": [
@@ -5085,9 +5160,11 @@
       "fromMe": true,
       "direction": "out",
       "text": "Payment Application\n\nSelect:\n\n☑ Customer Developed\n\nInterface Language\n\nOther \n\nWrite:\n\nNode.js / Next.js – REST API\n\nTransaction Types\n\n☑ SSL+\n\nVerified by Visa\n\nYes\n\nMasterCard SecureCode\n\nYes\n\nCard to be Processed (tick all that apply)\n\n☑ MasterCard\n☑ Visa\n☑ Maestro\n☑ RuPay",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "Me",
-      "timestamp": "2026-09-19T05:03:33.000Z"
+      "timestamp": "2026-09-19T05:03:33.000Z",
+      "mediaType": null,
+      "status": "READ"
     }
   ],
   "219206557683955@lid": [
@@ -5217,9 +5294,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "Thanks sir",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "219206557683955",
-      "timestamp": "2026-08-25T13:16:20.000Z"
+      "timestamp": "2026-08-25T13:16:20.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "447710173736@s.whatsapp.net": [
@@ -5249,9 +5328,11 @@
       "fromMe": false,
       "direction": "in",
       "text": "82271 is your Facebook confirmation code",
-      "messageType": "conversation",
+      "messageType": "text",
       "name": "447710173736",
-      "timestamp": "2026-08-17T09:50:53.000Z"
+      "timestamp": "2026-08-17T09:50:53.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "447974905090@s.whatsapp.net": [
@@ -5263,7 +5344,9 @@
       "text": "Media/System Message",
       "messageType": "text",
       "name": "447974905090",
-      "timestamp": "2026-08-12T08:20:48.000Z"
+      "timestamp": "2026-08-12T08:20:48.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "918105749018@s.whatsapp.net": [
@@ -5275,7 +5358,9 @@
       "text": "Media/System Message",
       "messageType": "text",
       "name": "918105749018",
-      "timestamp": "2026-08-12T04:35:38.000Z"
+      "timestamp": "2026-08-12T04:35:38.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ],
   "18668392077@s.whatsapp.net": [
@@ -5287,7 +5372,9 @@
       "text": "Media/System Message",
       "messageType": "text",
       "name": "18668392077",
-      "timestamp": "2026-08-11T10:06:01.000Z"
+      "timestamp": "2026-08-11T10:06:01.000Z",
+      "mediaType": null,
+      "status": "DELIVERED"
     }
   ]
 }
