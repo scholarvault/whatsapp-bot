@@ -37,7 +37,9 @@
   async function templates() {
     let channel = 'wa';
     let selected = null;
-    let wa = JSON.parse(localStorage.getItem('sv_wa_templates') || '[]');
+    const waResponse = await api('/api/whatsapp/templates').catch(() => ({ templates:[] }));
+    let wa = Array.isArray(waResponse.templates) && waResponse.templates.length ? waResponse.templates : JSON.parse(localStorage.getItem('sv_wa_templates') || '[]');
+    if(wa.length) localStorage.setItem('sv_wa_templates', JSON.stringify(wa));
     const emailResponse = await api('/api/email/templates').catch(() => ({ templates:[] }));
     let email = array(emailResponse.templates ?? emailResponse.data?.templates ?? emailResponse);
     root().innerHTML = `<div class="premium-shell"><div class="premium-toolbar"><div><span class="premium-kicker">Content studio</span><h2>Templates</h2><p>Create, preview and maintain every WhatsApp and email message in one place.</p></div><button class="primary-btn" id="premiumNewTemplate"><i data-lucide="plus"></i> New template</button></div><div class="premium-tabs"><button class="active" data-channel="wa">WhatsApp & Spintax</button><button data-channel="email">Email HTML</button></div><div class="premium-grid"><section class="premium-card premium-library"><div class="library-head"><h3>Template library</h3><input id="templateSearch" placeholder="Search templates"></div><div id="premiumTemplateList"></div></section><section class="premium-card premium-editor"><div class="editor-head"><div><span class="premium-kicker" id="editorMode">New WhatsApp template</span><h3 id="editorTitle">Compose template</h3></div><button class="secondary-btn" id="clearTemplate">Clear</button></div><div class="premium-form"><label>Template name<input id="premiumTemplateName" placeholder="e.g. ICAHCR registration follow-up"></label><label id="subjectWrap" hidden>Email subject<input id="premiumTemplateSubject" placeholder="e.g. Your ICAHCR invitation"></label><label><span id="bodyLabel">Message with Spintax</span><textarea id="premiumTemplateBody" rows="15" placeholder="Write your reusable message..."></textarea></label><div class="premium-actions"><button class="secondary-btn danger" id="deleteTemplate" hidden>Delete</button><button class="primary-btn" id="saveTemplate"><i data-lucide="save"></i> Save template</button></div></div></section><aside class="premium-card premium-preview"><div class="preview-head"><div><span class="premium-kicker">Live preview</span><h3>Recipient view</h3></div><span class="preview-chip" id="previewChannel">WhatsApp</span></div><div id="premiumTemplatePreview" class="message-preview"></div><p class="preview-help" id="previewHelp">Spintax shows the first variation. The sender rotates it during campaigns.</p></aside></div></div>`;
@@ -93,7 +95,9 @@
       if (!name || !body || (channel === 'email' && !subject)) return toast('Complete the template name, content and subject.', 'error');
       try {
         if (channel === 'wa') {
-          const item = { ...(selected === null ? {} : wa[selected]), name, message:body };
+          const current = selected === null ? {} : wa[selected];
+          const res = await api('/api/whatsapp/templates', { method:'POST', body:JSON.stringify({ id:current?.id, name, body }) });
+          const item = { ...current, id: res?.template?.id || current?.id, name, message:body, body };
           selected === null ? wa.unshift(item) : wa[selected] = item;
           localStorage.setItem('sv_wa_templates', JSON.stringify(wa)); window.loadTemplateSelectors?.(); selected = selected === null ? 0 : selected;
         } else {
@@ -106,7 +110,12 @@
     };
     document.getElementById('deleteTemplate').onclick = async () => {
       if (selected === null || !confirm('Delete this template? This cannot be undone.')) return;
-      try { if (channel === 'wa') { wa.splice(selected, 1); localStorage.setItem('sv_wa_templates', JSON.stringify(wa)); window.loadTemplateSelectors?.(); } else { await api(`/api/email/templates/${encodeURIComponent(email[selected].id)}`, { method:'DELETE' }); const refreshed = await api('/api/email/templates'); email = array(refreshed.templates ?? refreshed.data?.templates ?? refreshed); } selected = null; edit(null); drawList(); toast('Template deleted'); } catch (error) { toast(error.message, 'error'); }
+      try {
+        if (channel === 'wa') {
+          const delId = wa[selected]?.id;
+          if (delId) await api(`/api/whatsapp/templates/${encodeURIComponent(delId)}`, { method:'DELETE' }).catch(() => {});
+          wa.splice(selected, 1); localStorage.setItem('sv_wa_templates', JSON.stringify(wa)); window.loadTemplateSelectors?.();
+        } else { await api(`/api/email/templates/${encodeURIComponent(email[selected].id)}`, { method:'DELETE' }); const refreshed = await api('/api/email/templates'); email = array(refreshed.templates ?? refreshed.data?.templates ?? refreshed); } selected = null; edit(null); drawList(); toast('Template deleted'); } catch (error) { toast(error.message, 'error'); }
     };
     switchChannel('wa'); icons();
   }

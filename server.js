@@ -38,7 +38,7 @@ function crmSessionFor(req) {
 }
 function crmAuthRequired(req, res, next) {
     if (crmSessionFor(req)) return next();
-    if (req.path.startsWith('/api/')) return res.status(401).json({ success: false, message: 'Please sign in to use ScholarVault CRM.' });
+    if (req.originalUrl?.startsWith('/api/') || req.baseUrl?.startsWith('/api/') || req.path.startsWith('/api/')) return res.status(401).json({ success: false, message: 'Please sign in to use ScholarVault CRM.' });
     return res.redirect('/crm/login');
 }
 function setCrmSession(res, req) {
@@ -168,13 +168,13 @@ const getDb = (name) => {
     try {
         const file = path.join(DB_DIR, `${name}.json`);
         if (!fs.existsSync(file)) {
-            const isArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name);
+            const isArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs', 'whatsapp_templates'].includes(name);
             fs.writeFileSync(file, isArray ? '[]' : '{}');
         }
         let data = JSON.parse(fs.readFileSync(file, 'utf8'));
         
         // Defensive type guard to prevent serialization errors (e.g. conversations loaded as array)
-        const expectArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name);
+        const expectArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs', 'whatsapp_templates'].includes(name);
         if (expectArray && !Array.isArray(data)) {
             data = [];
         } else if (!expectArray && (Array.isArray(data) || typeof data !== 'object' || data === null)) {
@@ -183,7 +183,7 @@ const getDb = (name) => {
         return data;
     } catch (e) {
         console.error(`[DB Error] Failed reading ${name}:`, e.message);
-        return ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name) ? [] : {};
+        return ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs', 'whatsapp_templates'].includes(name) ? [] : {};
     }
 };
 
@@ -2462,6 +2462,7 @@ setInterval(async () => {
                 console.log(`[Campaign Queue] Starting: ${camp.name}`);
                 campaigns[campId] = { ...camp, status: 'processing', startedAt: new Date().toISOString() };
                 saveDb('campaigns', campaigns);
+                if (typeof io !== 'undefined' && io) io.emit('campaign_update', { id: campId, status: 'processing', name: camp.name });
                 // Do not await the long-running campaign. Its processing state
                 // prevents the next queue item from beginning prematurely.
                 processBulkCampaign(campId, campaigns[campId]).catch(error => console.error(`[Campaign Queue] ${camp.name} failed:`, error.message));
@@ -2669,6 +2670,14 @@ async function processBulkCampaign(campId, campData) {
             failedCount++;
             details.push({ phone: targetJid, name: contact.name || '-', status: 'failed', reason: sentResult ? sentResult.reason : 'Failed locally' });
         }
+        let liveCamps = getDb('campaigns');
+        if (liveCamps[campId]) {
+            liveCamps[campId].status = 'running';
+            liveCamps[campId].sentCount = sentCount;
+            liveCamps[campId].failedCount = failedCount;
+            saveDb('campaigns', liveCamps);
+            if (typeof io !== 'undefined' && io) io.emit('campaign_update', { id: campId, status: 'running', sentCount, failedCount, total: contacts.length });
+        }
         // Delay between batch messages
         await new Promise(r => setTimeout(r, delayBetweenMs || 5000));
     }
@@ -2684,6 +2693,7 @@ async function processBulkCampaign(campId, campData) {
         if (!wasStopped && !dailyLimitReached) campaigns[campId].completedAt = new Date().toISOString();
         saveDb('campaigns', campaigns);
         console.log(`[Campaign] Finished ${campData.name}: ${sentCount} sent, ${failedCount} failed.`);
+        if (typeof io !== 'undefined' && io) io.emit('campaign_update', { id: campId, status: campaigns[campId].status, sentCount, failedCount, total: contacts.length });
     }
 }
 
@@ -2706,6 +2716,7 @@ app.post('/api/campaigns', (req, res) => {
         instanceName: req.body.instanceName || getDefaultInstanceName()
     };
     saveDb('campaigns', campaigns);
+    if (typeof io !== 'undefined' && io) io.emit('campaign_update', { id: campId, status: 'scheduled', name: campaigns[campId].name });
     res.json({ success: true, message: 'Campaign Queued', campId });
 });
 app.get('/api/campaigns', (req, res) => res.json({ success: true, campaigns: getDb('campaigns') }));
@@ -2981,6 +2992,47 @@ app.delete('/api/resource-packs/:id', (req, res) => {
     const stored = getDb('resource_packs');
     const packs = Array.isArray(stored) ? stored : Object.entries(stored || {}).map(([id, value]) => ({ id, ...(value || {}) }));
     saveDb('resource_packs', packs.filter(pack => pack.id !== req.params.id)); res.json({ success: true });
+});
+
+app.get('/api/whatsapp/templates', (req, res) => {
+    let templates = getDb('whatsapp_templates');
+    if (!Array.isArray(templates) || templates.length === 0) {
+        templates = [
+            {
+                id: 'wa_svrias_cfp_story',
+                name: 'SVRIAS 2026 — Call for Papers (Anti-Paper-Mill Story)',
+                body: `{Dear|Respected|Hello} {{name}},\n\n{Have you ever attended an academic conference organized by an anonymous association, only to discover later that your paper was un-indexed or associated with a predatory paper-mill?|Every year, thousands of researchers lose their hard-earned publication funds to unverified conference networks promising fake indexing.}\n\nAt *ScholarVault*, we are changing that. As a *DPIIT-recognized academic integrity initiative*, we verify conferences using our *18-point SCVS forensic audit* to ensure genuine peer review and legitimate DOI archival.\n\nWe are officially inviting you to submit your abstract to *SVRIAS 2026* (*ScholarVault Research Integrity & Academic Summit*):\n\n📅 *Theme:* Research Integrity in the Age of Generative AI & Responsible Governance\n🌐 *Format:* 100% Virtual / Online (Attend globally without travel barriers)\n⚡ *Review:* Rapid 2–4 Day Editorial Peer-Review\n🎓 *Student Grants:* 10 Full (100%) Registration Fee Waivers Available\n\n📌 *Submit Abstract / Call for Papers:* https://researchintegrity2026.scholarvault.in/call-for-papers.html\n\n{Would you like me to send the official Call for Papers brochure?|Let me know if you are interested in presenting or reviewing!}\n\n— *ScholarVault Conference Desk*\n🌐 www.scholarvault.in`,
+                message: `{Dear|Respected|Hello} {{name}},\n\n{Have you ever attended an academic conference organized by an anonymous association, only to discover later that your paper was un-indexed or associated with a predatory paper-mill?|Every year, thousands of researchers lose their hard-earned publication funds to unverified conference networks promising fake indexing.}\n\nAt *ScholarVault*, we are changing that. As a *DPIIT-recognized academic integrity initiative*, we verify conferences using our *18-point SCVS forensic audit* to ensure genuine peer review and legitimate DOI archival.\n\nWe are officially inviting you to submit your abstract to *SVRIAS 2026* (*ScholarVault Research Integrity & Academic Summit*):\n\n📅 *Theme:* Research Integrity in the Age of Generative AI & Responsible Governance\n🌐 *Format:* 100% Virtual / Online (Attend globally without travel barriers)\n⚡ *Review:* Rapid 2–4 Day Editorial Peer-Review\n🎓 *Student Grants:* 10 Full (100%) Registration Fee Waivers Available\n\n📌 *Submit Abstract / Call for Papers:* https://researchintegrity2026.scholarvault.in/call-for-papers.html\n\n{Would you like me to send the official Call for Papers brochure?|Let me know if you are interested in presenting or reviewing!}\n\n— *ScholarVault Conference Desk*\n🌐 www.scholarvault.in`,
+                updatedAt: new Date().toISOString()
+            }
+        ];
+        saveDb('whatsapp_templates', templates);
+    }
+    res.json({ success: true, templates });
+});
+app.post('/api/whatsapp/templates', (req, res) => {
+    const body = req.body || {};
+    let templates = getDb('whatsapp_templates');
+    if (!Array.isArray(templates)) templates = [];
+    const text = String(body.body || body.message || body.text || '').trim();
+    const template = {
+        id: body.id || `wa_tpl_${Date.now()}`,
+        name: String(body.name || 'Untitled template').trim(),
+        body: text,
+        message: text,
+        updatedAt: new Date().toISOString()
+    };
+    const index = templates.findIndex(t => t.id === template.id);
+    if (index >= 0) templates[index] = template;
+    else templates.unshift(template);
+    saveDb('whatsapp_templates', templates);
+    res.json({ success: true, template });
+});
+app.delete('/api/whatsapp/templates/:id', (req, res) => {
+    let templates = getDb('whatsapp_templates');
+    if (!Array.isArray(templates)) templates = [];
+    saveDb('whatsapp_templates', templates.filter(t => t.id !== req.params.id));
+    res.json({ success: true });
 });
 
 

@@ -1,1 +1,16 @@
-{}
+[
+  {
+    "id": "pack_svrias_2026",
+    "name": "SVRIAS 2026 (Research Integrity Summit)",
+    "brochure": "https://researchintegrity2026.scholarvault.in/call-for-papers.html",
+    "brochureLink": "https://researchintegrity2026.scholarvault.in/call-for-papers.html",
+    "registrationLink": "https://researchintegrity2026.scholarvault.in/register.html",
+    "cfpReminder": "https://researchintegrity2026.scholarvault.in/submit-paper.html",
+    "cfpLink": "https://researchintegrity2026.scholarvault.in/submit-paper.html",
+    "paymentLink": "https://researchintegrity2026.scholarvault.in/register.html",
+    "brochureMessage": "Here is the Call for Papers and Summit Guide for SVRIAS 2026: https://researchintegrity2026.scholarvault.in/call-for-papers.html",
+    "registrationMessage": "Here is the official registration and grant application link for SVRIAS 2026: https://researchintegrity2026.scholarvault.in/register.html",
+    "drafts": {},
+    "updatedAt": "2026-09-25T08:52:42.940Z"
+  }
+]

@@ -38,7 +38,7 @@ async function api(path, options = {}) {
 function iconRefresh(){ if (window.lucide) lucide.createIcons(); }
 function toast(message, type='') { const node = document.createElement('div'); node.className = `toast ${type}`; node.textContent = message; $('#toastRegion').append(node); setTimeout(() => node.remove(), 3600); }
 function avatarMarkup(name, url, cls='avatar') { return `<div class="${cls}">${url ? `<img src="${escapeHtml(url)}" alt="">` : initials(name)}</div>`; }
-function setView(view) { state.view = view; document.querySelectorAll('.view').forEach(el => el.classList.remove('active')); const isLegacy = Boolean(legacyPages[view]); const el = isLegacy ? $('#legacyView') : $(`#${view.replace(/-([a-z])/g, (_,c)=>c.toUpperCase())}View`); if (!el) return; el.classList.add('active'); document.querySelectorAll('.nav-link').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view)); const meta = legacyPages[view] ? ['Feature workspace', legacyPages[view][1]] : (viewMeta[view] || ['Workspace', view]); $('#viewKicker').textContent = meta[0]; $('#viewTitle').textContent = meta[1]; if (isLegacy) loadLegacyModule(view); if (view === 'overview') loadOverview(); if (view === 'inbox') loadInbox(); if (view === 'contacts') loadContacts(); if (view === 'quick-message'||view==='campaign'){loadTemplateSelectors();if(view==='campaign'){ensureCampaignSafeguardsUi();renderDripSteps();loadCampaignQueue();}if(view==='quick-message')loadQuickQueue();} if (view === 'campaign-history') loadCampaigns(); iconRefresh(); }
+function setView(view) { state.view = view; document.querySelectorAll('.view').forEach(el => el.classList.remove('active')); const isLegacy = Boolean(legacyPages[view]); const el = isLegacy ? $('#legacyView') : $(`#${view.replace(/-([a-z])/g, (_,c)=>c.toUpperCase())}View`); if (!el) return; el.classList.add('active'); document.querySelectorAll('.nav-link').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view)); const meta = legacyPages[view] ? ['Feature workspace', legacyPages[view][1]] : (viewMeta[view] || ['Workspace', view]); $('#viewKicker').textContent = meta[0]; $('#viewTitle').textContent = meta[1]; if (isLegacy) loadLegacyModule(view); if (view === 'overview') loadOverview(); if (view === 'inbox') loadInbox(); if (view === 'contacts') loadContacts(); if (view === 'quick-message'||view==='campaign'){loadTemplateSelectors();syncWhatsAppTemplates();if(view==='campaign'){ensureCampaignSafeguardsUi();renderDripSteps();loadCampaignQueue();}if(view==='quick-message')loadQuickQueue();} if (view === 'campaign-history') loadCampaigns(); iconRefresh(); }
 
 async function loadConnection() { const sidebarLabel=$('#sidebarConnection'); try { const health = await api('/api/health'); const online = String(health.state || '').toLowerCase() === 'open'; document.querySelectorAll('.status-dot').forEach(x => x.className = `status-dot ${online ? 'online':'offline'}`); if(sidebarLabel)sidebarLabel.textContent = online ? 'WhatsApp connected' : `WhatsApp ${health.state || 'offline'}`; $('#topConnectionText').textContent = online ? 'Connected' : 'Connect WhatsApp'; $('#connectionBadge').textContent = online ? 'Connected' : 'Needs attention'; } catch { document.querySelectorAll('.status-dot').forEach(x => x.className = 'status-dot offline'); if(sidebarLabel)sidebarLabel.textContent = 'Evolution offline'; $('#topConnectionText').textContent = 'Connect WhatsApp'; $('#connectionBadge').textContent = 'Offline'; } }
 async function loadMasterAi(){ try { const data = await api('/api/settings/master-ai'); state.masterPaused = Boolean(data.paused); $('#masterAi').checked = !state.masterPaused; $('#masterAiLabel').textContent = state.masterPaused ? 'Paused' : 'On'; } catch { $('#masterAiLabel').textContent = 'Unavailable'; } }
@@ -79,7 +79,56 @@ function readFile(file){return new Promise((resolve,reject)=>{const reader=new F
 async function sendAttachment(file, context='chat'){ if(!file)return; try{const media=await readFile(file); if(context==='chat'){ if(!state.activeJid)throw new Error('Select a conversation first'); await api(`/api/inbox/${encodeURIComponent(state.activeJid)}/media`,{method:'POST',body:JSON.stringify({media,mediatype:file.type.startsWith('image')?'image':file.type.startsWith('video')?'video':file.type.startsWith('audio')?'audio':'document',fileName:file.name,caption:$('#messageInput').value.trim()})}); $('#messageInput').value=''; await openChat(state.activeJid,false); toast('Attachment sent','success'); } else { state[context==='campaign'?'campaignAttachments':'quickAttachments'].push({base64:media,name:file.name,type:file.type||''}); renderAttachmentChips(context); } }catch(e){toast(e.message,'error')} }
 function renderAttachmentChips(kind){const data=state[kind==='campaign'?'campaignAttachments':'quickAttachments'];const target=$(`#${kind}Attachments`);if(!target)return;target.innerHTML=data.map((x,index)=>{const preview=String(x.base64||'').startsWith('data:image/')?`<img src="${escapeHtml(x.base64)}" alt="">`:`<i data-lucide="file-text"></i>`;return `<div class="attachment-chip attachment-card">${preview}<span title="${escapeHtml(x.name)}">${escapeHtml(x.name)}</span><button type="button" aria-label="Remove attachment" data-remove-attachment="${kind}" data-attachment-index="${index}"><i data-lucide="x"></i></button></div>`;}).join('');iconRefresh();}
 function cleanTemplateText(value){return String(value||'').replace(/<i\b[^>]*><\/i>/gi,'').replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();}
-function getSharedTemplates(){try{const templates=JSON.parse(localStorage.getItem('sv_wa_templates')||'[]');return Array.isArray(templates)?templates.map(t=>({name:cleanTemplateText(t.name)||'Untitled template',body:cleanTemplateText(t.body||t.text||'')})):[]}catch{return []}}
+const DEFAULT_SVRIAS_TEMPLATES = [
+  {
+    id: "wa_svrias_cfp_story",
+    name: "SVRIAS 2026 — Call for Papers (Anti-Paper-Mill Story)",
+    body: "{Dear|Respected|Hello} {{name}},\n\n{Have you ever attended an academic conference organized by an anonymous association, only to discover later that your paper was un-indexed or associated with a predatory paper-mill?|Every year, thousands of researchers lose their hard-earned publication funds to unverified conference networks promising fake indexing.}\n\nAt *ScholarVault*, we are changing that. As a *DPIIT-recognized academic integrity initiative*, we verify conferences using our *18-point SCVS forensic audit* to ensure genuine peer review and legitimate DOI archival.\n\nWe are officially inviting you to submit your abstract to *SVRIAS 2026* (*ScholarVault Research Integrity & Academic Summit*):\n\n📅 *Theme:* Research Integrity in the Age of Generative AI & Responsible Governance\n🌐 *Format:* 100% Virtual / Online (Attend globally without travel barriers)\n⚡ *Review:* Rapid 2–4 Day Editorial Peer-Review\n🎓 *Student Grants:* 10 Full (100%) Registration Fee Waivers Available\n\n📌 *Submit Abstract / Call for Papers:* https://researchintegrity2026.scholarvault.in/call-for-papers.html\n\n{Would you like me to send the official Call for Papers brochure?|Let me know if you are interested in presenting or reviewing!}\n\n— *ScholarVault Conference Desk*\n🌐 www.scholarvault.in"
+  },
+  {
+    id: "wa_svrias_grants",
+    name: "SVRIAS 2026 — Student Research Grants (100% Waiver)",
+    body: "{Hi|Hello} {{name}},\n\n{Great news for scholars and students!|Are you or your research students working on AI, computing, or research ethics?}\n\nApplications are now open for the *SVRIAS 2026 Student Research Grants* — awarding *100% Registration Fee Waivers* for top student and scholar submissions:\n\n🏆 *Summit:* SVRIAS 2026 (Responsible AI & Research Integrity Summit)\n📍 *Location:* Virtual / Online\n📄 *Perks:* ISBN Proceedings, Permanent DOI, and Best Paper Awards\n\nCheck eligibility and submit your abstract here:\n👉 https://researchintegrity2026.scholarvault.in/submit-paper.html\n\n{Feel free to share this with your PhD scholars and students.|Let us know if you need assistance with submission!}\n\n— *ScholarVault Academic Team*"
+  },
+  {
+    id: "wa_svrias_reviewer",
+    name: "SVRIAS 2026 — Reviewer / Technical Committee Invitation",
+    body: "{Respected Professor|Dear Dr.} {{name}},\n\n{Greetings from ScholarVault.|Hope you are having a productive week.}\n\nGiven your esteemed research background, we would be honored to invite you as a *Technical Reviewer / Session Chair* for the upcoming *SVRIAS 2026* (Research Integrity & Responsible AI Summit).\n\nDetails & Committee Portal:\n🔗 https://researchintegrity2026.scholarvault.in/committee.html\n\nAs a reviewer, you will receive an official *Certificate of Academic Contribution* recognized by ScholarVault Integrity Network.\n\nCould you please let us know if you would be open to evaluating 1–2 abstract submissions in your field?\n\nThank you for your valuable leadership in academic research.\n\n— *Shyam Sundar*\nFounder, ScholarVault"
+  },
+  {
+    id: "wa_svrias_quick_reminder",
+    name: "SVRIAS 2026 — Quick Abstract Reminder",
+    body: "{Hi|Hello} {{name}},\n\nQuick reminder regarding *SVRIAS 2026* (Responsible AI & Research Integrity Summit). Early abstract submissions are currently being evaluated with rapid *2–4 day editorial decisions*.\n\nSubmit your abstract online:\n👉 https://researchintegrity2026.scholarvault.in/submit-paper.html\n\n{Let me know if you have any questions about tracks or formatting!|Happy to share the conference brochure if needed.}\n\n— *ScholarVault Team*"
+  }
+];
+
+function getSharedTemplates(){
+  try{
+    let templates=JSON.parse(localStorage.getItem('sv_wa_templates')||'[]');
+    if(!Array.isArray(templates) || templates.length === 0){
+      templates = DEFAULT_SVRIAS_TEMPLATES;
+      localStorage.setItem('sv_wa_templates', JSON.stringify(templates));
+    }
+    return templates.map(t=>({id:t.id,name:cleanTemplateText(t.name)||'Untitled template',body:cleanTemplateText(t.body||t.message||t.text||'')}));
+  }catch{
+    return DEFAULT_SVRIAS_TEMPLATES.map(t=>({id:t.id,name:cleanTemplateText(t.name),body:cleanTemplateText(t.body)}));
+  }
+}
+
+async function syncWhatsAppTemplates(){
+  try{
+    const res = await api('/api/whatsapp/templates');
+    if(res && Array.isArray(res.templates) && res.templates.length > 0){
+      localStorage.setItem('sv_wa_templates', JSON.stringify(res.templates));
+      loadTemplateSelectors();
+      return res.templates;
+    }
+  }catch(e){
+    console.warn('Could not sync WhatsApp templates from backend:', e.message);
+  }
+  return getSharedTemplates();
+}
+
 function sampleSpintax(value){let result=String(value||'');for(let pass=0;pass<10;pass++){const next=result.replace(/\{([^{}|]+(?:\|[^{}]+)+)\}/g,(_,choices)=>{const options=choices.split('|').map(option=>option.trim()).filter(Boolean);return options.length?options[Math.floor(Math.random()*options.length)]:'';});if(next===result)break;result=next;}return result;}
 function templateSampleMarkup(template){const source=template.body||'',sample=sampleSpintax(source);return `<div class="spintax-preview quick-template-sample"><b>Sample variation</b><span>${escapeHtml(sample)}</span><details><summary>View editable Spintax source</summary><pre>${escapeHtml(source)}</pre></details></div>`;}
 function loadTemplateSelectors(){const templates=getSharedTemplates();for(const cfg of [{select:'#quickTemplate',preview:'#quickTemplatePreview',target:'#quickText'},{select:'#campaignTemplate',preview:'#campaignTemplatePreview',target:'#campaignText'}]){const select=$(cfg.select);if(!select)continue;select.innerHTML='<option value="">Custom message</option>'+templates.map((t,i)=>`<option value="${i}">${escapeHtml(t.name)}</option>`).join('');select.onchange=()=>{const template=templates[Number(select.value)];const preview=$(cfg.preview);if(!template){preview.textContent='Select a template to preview and insert it.';return}preview.innerHTML=templateSampleMarkup(template);$(cfg.target).value=template.body;};}}
@@ -122,9 +171,49 @@ function quickRecipientRows(){return $('#quickRecipient').value.split(/[\s,]+/).
 function quickRecipientSignature(){return quickRecipientRows().map(row=>row.phone||row.raw).join('|');}
 function renderQuickValidation(rows=quickRecipientRows(), verification=null){const target=$('#quickValidation');if(!rows.length){target.textContent='Paste numbers to check their country-code format, then validate WhatsApp availability.';return;}const checked=verification?.byPhone||{};const chips=rows.map(row=>{const result=checked[row.phone];const status=!row.formatValid?'invalid':result===false?'invalid':result===true?'valid':'pending';const note=!row.formatValid?'needs a country-code number':result===false?'not on WhatsApp':result===true?'WhatsApp verified':'format looks valid';return `<span class="recipient-chip ${status}">${escapeHtml(row.raw)} · ${note}</span>`;}).join('');const formatted=rows.filter(row=>row.formatValid).length;const verified=Object.values(checked).filter(value=>value===true).length;const invalid=rows.length-formatted+Object.values(checked).filter(value=>value===false).length;target.innerHTML=`<strong>${rows.length} recipient${rows.length===1?'':'s'}</strong> · ${verification?`${verified} WhatsApp verified, ${invalid} blocked from send.`:`${formatted} ready to validate, ${rows.length-formatted} format issue${rows.length-formatted===1?'':'s'}.`}<div class="recipient-chips">${chips}</div>`;}
 async function validateQuickRecipients({silent=false}={}){const rows=quickRecipientRows();renderQuickValidation(rows);const numbers=[...new Set(rows.filter(row=>row.formatValid).map(row=>row.phone))];if(!numbers.length){if(!silent)toast('Add at least one complete country-code number','error');return {valid:[],invalid:rows.map(row=>row.phone||row.raw)};}try{const response=await api('/api/validate-numbers',{method:'POST',body:JSON.stringify({phones:numbers})});const byPhone={};for(const item of response.results||[]){const phone=String(item.number||item.jid||'').replace(/\D/g,'');if(phone)byPhone[phone]=Boolean(item.exists);}for(const phone of response.invalid||[])byPhone[String(phone).replace(/\D/g,'')]=false;const valid=numbers.filter(phone=>byPhone[phone]===true);const invalid=numbers.filter(phone=>byPhone[phone]!==true);state.quickValidation={signature:quickRecipientSignature(),valid,invalid,byPhone};renderQuickValidation(rows,state.quickValidation);if(!silent)toast(`${valid.length} WhatsApp number${valid.length===1?'':'s'} verified${invalid.length?`; ${invalid.length} unavailable`:''}`,invalid.length?'error':'success');return state.quickValidation;}catch(error){renderQuickValidation(rows);if(!silent)toast(`Could not validate numbers: ${error.message}`,'error');throw error;}}
-async function loadQuickQueue(){const target=$('#quickQueue');if(!target)return;try{const data=await api('/api/campaigns');const queue=Object.entries(data.campaigns||{}).map(([id,c])=>({id,...c})).filter(c=>String(c.name||'').startsWith('Quick message')).filter(c=>['scheduled','processing','running','stopped','paused_limit'].includes(String(c.status||'').toLowerCase())).sort((a,b)=>Number(a.scheduledFor||0)-Number(b.scheduledFor||0));const rows=queue.map(c=>{const canStop=['scheduled','processing','running','paused_limit'].includes(String(c.status||'').toLowerCase());return '<div class="quick-queue-row"><span><b>'+escapeHtml(c.status||'scheduled')+'</b><small>'+escapeHtml(new Date(c.scheduledFor||c.createdAt).toLocaleString())+' · '+(c.sentCount||0)+'/'+(c.contacts||[]).length+' sent</small></span>'+(canStop?'<button class="text-btn danger-text" data-stop-campaign="'+escapeHtml(c.id)+'">Stop</button>':'')+'</div>';}).join('');target.innerHTML='<h3>Scheduled & active sends</h3>'+(rows||'<p>No scheduled or active Quick Messages.</p>');}catch(error){target.innerHTML='<h3>Scheduled & active sends</h3><p>Queue status is temporarily unavailable.</p>';}}
+function clearQuickDraft(){
+  if($('#quickRecipient')) $('#quickRecipient').value = '';
+  if($('#quickText')) $('#quickText').value = '';
+  if($('#quickSchedule')) $('#quickSchedule').value = '';
+  if($('#quickTemplate')) $('#quickTemplate').value = '';
+  if($('#quickTemplatePreview')) $('#quickTemplatePreview').textContent = 'Select a template to preview and insert it.';
+  state.quickValidation = null;
+  state.quickAttachments = [];
+  state.quickPoll = null;
+  renderAttachmentChips('quick');
+  renderQuickValidation([]);
+}
+async function loadQuickQueue(){
+  const target=$('#quickQueue');
+  if(!target)return;
+  try{
+    const data=await api('/api/campaigns');
+    const allQuick=Object.entries(data.campaigns||{}).map(([id,c])=>({id,...c})).filter(c=>String(c.name||'').startsWith('Quick message'));
+    const active=allQuick.filter(c=>['scheduled','processing','running','stopped','paused_limit'].includes(String(c.status||'').toLowerCase())).sort((a,b)=>Number(a.scheduledFor||0)-Number(b.scheduledFor||0));
+    const recent=allQuick.filter(c=>String(c.status||'').toLowerCase()==='completed').sort((a,b)=>new Date(b.completedAt||b.createdAt||0).getTime()-new Date(a.completedAt||a.createdAt||0).getTime()).slice(0, 4);
+    
+    const activeRows=active.map(c=>{
+      const canStop=['scheduled','processing','running','paused_limit'].includes(String(c.status||'').toLowerCase());
+      const isSending=['processing','running'].includes(String(c.status||'').toLowerCase());
+      const badge=isSending?'<span style="color:#d98613;font-weight:700">Sending…</span>':escapeHtml(c.status||'scheduled');
+      return `<div class="quick-queue-row"><span><b>${badge}</b><small>${escapeHtml(new Date(c.scheduledFor||c.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))} · ${(c.sentCount||0)}/${(c.contacts||[]).length} sent</small></span>${canStop?`<button class="text-btn danger-text" data-stop-campaign="${escapeHtml(c.id)}">Stop</button>`:''}</div>`;
+    }).join('');
+
+    const recentRows=recent.map(c=>`
+      <div class="quick-queue-row completed-row">
+        <span><b class="text-success"><i data-lucide="check-check"></i> Delivered</b><small>${escapeHtml(new Date(c.completedAt||c.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))} · ${(c.sentCount||0)}/${(c.contacts||[]).length} sent</small></span>
+      </div>
+    `).join('');
+
+    const content=(activeRows || recentRows)?(activeRows + recentRows):'<p class="muted">No recent Quick Messages.</p>';
+    target.innerHTML='<h3>Recent & active sends</h3>'+content;
+    iconRefresh();
+  }catch(error){
+    target.innerHTML='<h3>Recent & active sends</h3><p>Queue status is temporarily unavailable.</p>';
+  }
+}
 async function loadCampaignQueue(){const target=$('#campaignQueue');if(!target)return;try{const data=await api('/api/campaigns');const queue=Object.entries(data.campaigns||{}).map(([id,c])=>({id,...c})).filter(c=>!String(c.name||'').startsWith('Quick message')).filter(c=>['scheduled','processing','running','stopped','paused_limit'].includes(String(c.status||'').toLowerCase())).sort((a,b)=>Number(a.scheduledFor||0)-Number(b.scheduledFor||0));const rows=queue.map((c,index)=>{const canStop=['scheduled','processing','running','paused_limit'].includes(String(c.status||'').toLowerCase());const stateLabel=String(c.status||'scheduled').toLowerCase()==='scheduled'?`#${index+1} in queue · ${c.status}`:c.status;return '<div class="quick-queue-row"><span><b>'+escapeHtml(stateLabel)+'</b><small>'+escapeHtml(c.name||'Campaign')+' · '+escapeHtml(new Date(c.scheduledFor||c.createdAt).toLocaleString())+'</small></span>'+(canStop?'<button class="text-btn danger-text" data-stop-campaign="'+escapeHtml(c.id)+'">Cancel</button>':'')+'</div>';}).join('');target.innerHTML='<h3>Campaign queue</h3>'+(rows||'<p>No scheduled or active bulk campaigns.</p>');}catch(error){target.innerHTML='<h3>Campaign queue</h3><p>Queue status is temporarily unavailable.</p>';}}
-async function sendQuick(){const rows=quickRecipientRows();const message=$('#quickText').value.trim();if(!rows.length||(!message&&!state.quickAttachments.length&&!state.quickPoll))return toast('Add recipients and message content','error');let check=state.quickValidation;if(!check||check.signature!==quickRecipientSignature())check=await validateQuickRecipients();const valid=check.valid||[];if(!valid.length)return toast('No verified WhatsApp recipients to queue','error');try{const schedule=$('#quickSchedule')?.value?new Date($('#quickSchedule').value).getTime():Date.now();const delaySeconds=Math.min(120,Math.max(3,Number($('#quickDelay')?.value||5)));await api('/api/campaigns',{method:'POST',body:JSON.stringify({name:`Quick message ${new Date().toLocaleString()}`,contacts:valid.map(phone=>({phone,name:state.contacts[`${phone}@s.whatsapp.net`]?.name||''})),messageTemplate:message,attachments:state.quickAttachments,mediaOrder:$('#quickOrder')?.value||'caption',pollQuestion:state.quickPoll?.question||'',pollOptions:state.quickPoll?.options||[],scheduledFor:schedule,delayBetweenMs:delaySeconds*1000})});toast(`${valid.length} verified recipient${valid.length===1?'':'s'} ${schedule>Date.now()+30000?'scheduled':'queued'} with a ${delaySeconds}s gap`, 'success');$('#quickText').value='';state.quickAttachments=[];state.quickPoll=null;renderAttachmentChips('quick');loadQuickQueue()}catch(e){toast(e.message,'error')}}
+async function sendQuick(){const rows=quickRecipientRows();const message=$('#quickText').value.trim();if(!rows.length||(!message&&!state.quickAttachments.length&&!state.quickPoll))return toast('Add recipients and message content','error');let check=state.quickValidation;if(!check||check.signature!==quickRecipientSignature())check=await validateQuickRecipients();const valid=check.valid||[];if(!valid.length)return toast('No verified WhatsApp recipients to queue','error');try{const schedule=$('#quickSchedule')?.value?new Date($('#quickSchedule').value).getTime():Date.now();const delaySeconds=Math.min(120,Math.max(3,Number($('#quickDelay')?.value||5)));await api('/api/campaigns',{method:'POST',body:JSON.stringify({name:`Quick message ${new Date().toLocaleString()}`,contacts:valid.map(phone=>({phone,name:state.contacts[`${phone}@s.whatsapp.net`]?.name||''})),messageTemplate:message,attachments:state.quickAttachments,mediaOrder:$('#quickOrder')?.value||'caption',pollQuestion:state.quickPoll?.question||'',pollOptions:state.quickPoll?.options||[],scheduledFor:schedule,delayBetweenMs:delaySeconds*1000})});toast(`${valid.length} verified recipient${valid.length===1?'':'s'} ${schedule>Date.now()+30000?'scheduled':'queued'} with a ${delaySeconds}s gap`, 'success');clearQuickDraft();loadQuickQueue();}catch(e){toast(e.message,'error')}}
 async function launchCampaign(){return reviewCampaign(true)}
 async function loadCampaigns(){try{const data=await api('/api/campaigns');const campaigns=Object.values(data.campaigns||{});toast(`${campaigns.length} campaign records available`)}catch{}}
 
@@ -134,7 +223,7 @@ async function connect(){try{const data=await api('/api/start-evolution',{method
 async function deleteChat(){if(!state.activeJid)return;showDialog(`<div class="dialog-content"><h2>Delete this chat?</h2><p>This permanently removes the CRM conversation history and Media Gallery. WhatsApp itself may retain the chat because Evolution does not provide a whole-chat deletion command.</p><div class="dialog-actions"><button class="secondary-btn" value="cancel">Cancel</button><button id="confirmDeleteChat" class="primary-btn" value="default" style="background:var(--red)">Delete CRM chat</button></div></div>`);$('#confirmDeleteChat').addEventListener('click',async e=>{e.preventDefault();try{const result=await api(`/api/inbox/${encodeURIComponent(state.activeJid)}`,{method:'DELETE'});$('#crmDialog').close();state.activeJid=null;$('#threadWorkspace').hidden=true;$('#emptyThread').hidden=false;$('#contactProfile').hidden=true;$('#emptyContact').hidden=false;await loadInbox();toast(result.whatsappDeletionSupported===false?'CRM chat deleted. Delete it in WhatsApp mobile if you also want it removed there.':'Chat deleted','success')}catch(err){toast(err.message,'error')}})}
 async function recordVoice(){if(!state.activeJid)return toast('Select a conversation first','error');if(state.recorder?.state==='recording'){state.recorder.stop();return;}try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});state.chunks=[];state.recorder=new MediaRecorder(stream);state.recorder.ondataavailable=e=>state.chunks.push(e.data);state.recorder.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());try{const blob=new Blob(state.chunks,{type:'audio/webm'});const base64=await readFile(blob);await api('/api/chat/send-audio',{method:'POST',body:JSON.stringify({jid:state.activeJid,base64})});toast('Voice note sent','success');await openChat(state.activeJid,false)}catch(e){toast(e.message,'error')} $('#voiceButton').classList.remove('recording');};state.recorder.start();$('#voiceButton').classList.add('recording');toast('Recording… click again to send');}catch(e){toast('Microphone access is required to send a voice note','error')}}
 
-document.addEventListener('click',e=>{const view=e.target.closest('[data-view]')?.dataset.view;if(view){e.preventDefault();setView(view);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action){const actions={refresh:()=>{loadConnection();syncInbox();loadOverview()},connect,attachment:()=>$('#chatFile').click(),poll:()=>openPoll('chat'),voice:recordVoice,'send-message':sendMessage,'toggle-handoff':toggleHandoff,'delete-chat':deleteChat,'add-contact':addContact,duplicates:duplicateModal,'import-contacts':importContacts,'pick-contact':pickContact,'quick-attachment':()=>$('#quickFile').click(),'quick-poll':()=>openPoll('quick'),'send-quick':sendQuick,'campaign-attachment':()=>$('#campaignFile').click(),'campaign-poll':()=>openPoll('campaign'),'launch-campaign':launchCampaign,'campaign-preflight':()=>reviewCampaign(false),'build-campaign-audience':buildCampaignAudience,'open-legacy':openLegacy,'new-message':()=>setView('quick-message'),'show-media':()=>toast('Media is shown in this contact panel. Click a file to open it.'),'edit-contact':editActiveContact};actions[action]?.();return}const jid=e.target.closest('[data-open-chat]')?.dataset.openChat;if(jid){setView('inbox');openChat(jid);return}const contact=e.target.closest('[data-open-contact]')?.dataset.openContact;if(contact){setView('inbox');openChat(contact);return}const msg=e.target.closest('[data-message-action]');if(msg)messageAction(msg.dataset.messageAction,msg.dataset.messageId);});
+document.addEventListener('click',e=>{const view=e.target.closest('[data-view]')?.dataset.view;if(view){e.preventDefault();setView(view);return}const action=e.target.closest('[data-action]')?.dataset.action;if(action){const actions={refresh:()=>{loadConnection();syncInbox();loadOverview()},connect,attachment:()=>$('#chatFile').click(),poll:()=>openPoll('chat'),voice:recordVoice,'send-message':sendMessage,'toggle-handoff':toggleHandoff,'delete-chat':deleteChat,'add-contact':addContact,duplicates:duplicateModal,'import-contacts':importContacts,'pick-contact':pickContact,'quick-attachment':()=>$('#quickFile').click(),'quick-poll':()=>openPoll('quick'),'send-quick':sendQuick,'quick-clear':clearQuickDraft,'campaign-attachment':()=>$('#campaignFile').click(),'campaign-poll':()=>openPoll('campaign'),'launch-campaign':launchCampaign,'campaign-preflight':()=>reviewCampaign(false),'build-campaign-audience':buildCampaignAudience,'open-legacy':openLegacy,'new-message':()=>setView('quick-message'),'show-media':()=>toast('Media is shown in this contact panel. Click a file to open it.'),'edit-contact':editActiveContact};actions[action]?.();return}const jid=e.target.closest('[data-open-chat]')?.dataset.openChat;if(jid){setView('inbox');openChat(jid);return}const contact=e.target.closest('[data-open-contact]')?.dataset.openContact;if(contact){setView('inbox');openChat(contact);return}const msg=e.target.closest('[data-message-action]');if(msg)messageAction(msg.dataset.messageAction,msg.dataset.messageId);});
 $('#chatSearch').addEventListener('input',renderChatList);$('#contactSearch').addEventListener('input',renderContacts);$('#masterAi').addEventListener('change',setMasterAi);$('#themeToggle').addEventListener('click',()=>{document.body.classList.toggle('dark');localStorage.setItem('scholarvault-crm-theme',document.body.classList.contains('dark')?'dark':'light');iconRefresh()});$('#chatFile').addEventListener('change',e=>sendAttachment(e.target.files[0],'chat'));$('#quickFile').addEventListener('change',e=>sendAttachment(e.target.files[0],'quick'));$('#campaignFile').addEventListener('change',e=>sendAttachment(e.target.files[0],'campaign'));$('#campaignCsv').addEventListener('change',async e=>{try{state.campaignContacts=await parseCsv(e.target.files[0]);$('#campaignPreview').textContent=`${state.campaignContacts.length} valid contacts loaded. Existing validation runs before sending.`}catch{toast('Could not read CSV','error')}});$('#messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
 document.addEventListener('click',e=>{const action=e.target.closest('[data-action]')?.dataset.action;if(action==='campaign-crm-contacts'){state.campaignContacts=Object.values(state.contacts).map(c=>({phone:(c.jid||'').split('@')[0],name:c.name||''}));$('#campaignPreview').textContent=`${state.campaignContacts.length} CRM contacts loaded.`;return}if(action==='verify-campaign'){verifyCampaignContacts();return}if(action==='add-drip-step'){state.dripSteps=[...(state.dripSteps||[]),{daysAfter:1,message:''}];renderDripSteps();return}const remove=e.target.closest('[data-remove-drip]');if(remove){state.dripSteps.splice(Number(remove.dataset.removeDrip),1);renderDripSteps();return}const attachment=e.target.closest('[data-remove-attachment]');if(attachment){const key=attachment.dataset.removeAttachment==='campaign'?'campaignAttachments':'quickAttachments';state[key].splice(Number(attachment.dataset.attachmentIndex),1);renderAttachmentChips(attachment.dataset.removeAttachment);}});
 document.addEventListener('input',e=>{const days=e.target.dataset.dripDays,msg=e.target.dataset.dripMessage;if(days!==undefined)state.dripSteps[Number(days)].daysAfter=Number(e.target.value||1);if(msg!==undefined)state.dripSteps[Number(msg)].message=e.target.value;});
@@ -161,7 +250,130 @@ async function loadOverview(){try{const [inboxData,contactsData,campaignsData,le
 const renderOverviewAttention=loadOverview;
 loadOverview=async()=>{await renderOverviewAttention();try{const d=await api('/api/inbox');const live=new Set(canonicalInbox(d.messages||d.inbox||[]).map(c=>String(c.jid||'').toLowerCase()));document.querySelectorAll('#attentionList [data-open-chat]').forEach(row=>{if(!live.has(String(row.dataset.openChat||'').toLowerCase()))row.remove()});if(!document.querySelector('#attentionList [data-open-chat]'))$('#attentionList').innerHTML='<p class="muted">No priority work right now.</p>';}catch(_){}};
 if(localStorage.getItem('scholarvault-crm-theme')==='dark')document.body.classList.add('dark');
-const socket=window.io?.(); if(socket){socket.on('messages_update',()=>{loadInbox();if(state.activeJid)openChat(state.activeJid,false)});socket.on('receipts_updated',data=>{if(data?.jid===state.activeJid)api(`/api/inbox/${encodeURIComponent(state.activeJid)}/thread?refresh=0`).then(thread=>{state.activeThread=thread.thread||thread.messages||[];renderThread();updateProfile();}).catch(()=>{});});socket.on('new_message',data=>{loadInbox();if(data?.jid===state.activeJid)openChat(state.activeJid,false)});socket.on('master_ai_status',data=>{state.masterPaused=Boolean(data.paused);$('#masterAi').checked=!state.masterPaused;$('#masterAiLabel').textContent=state.masterPaused?'Paused':'On'});socket.on('sync_complete',()=>{loadInbox();loadOverview()});}
+function setLiveSyncState(status, text){
+  const badge=$('#liveSyncStatus');
+  if(!badge)return;
+  if(status==='live'){
+    badge.className='live-sync-badge active';
+    const label=badge.querySelector('span:last-child');
+    if(label)label.textContent=text||'Live';
+    badge.title='Real-time WebSocket & background sync active';
+  } else if(status==='polling'){
+    badge.className='live-sync-badge';
+    const label=badge.querySelector('span:last-child');
+    if(label)label.textContent=text||'Polling';
+    badge.title='Background polling active (SWR fallback)';
+  } else {
+    badge.className='live-sync-badge offline';
+    const label=badge.querySelector('span:last-child');
+    if(label)label.textContent=text||'Offline';
+    badge.title='Sync disconnected';
+  }
+}
+
+const socket=window.io?.();
+if(socket){
+  socket.on('connect',()=>{
+    setLiveSyncState('live','Live');
+  });
+  socket.on('disconnect',()=>{
+    setLiveSyncState('polling','Polling');
+  });
+  socket.on('campaign_update',()=>{
+    if(state.view==='quick-message') loadQuickQueue();
+    if(state.view==='campaign') loadCampaignQueue();
+    if(state.view==='overview') loadOverview();
+    if(state.view==='campaign-history') loadCampaigns();
+  });
+  socket.on('messages_update',()=>{
+    loadInbox();
+    if(state.activeJid) openChat(state.activeJid,false);
+  });
+  socket.on('receipts_updated',data=>{
+    if(data?.jid===state.activeJid){
+      api(`/api/inbox/${encodeURIComponent(state.activeJid)}/thread?refresh=0`).then(thread=>{
+        state.activeThread=thread.thread||thread.messages||[];
+        renderThread();
+        updateProfile();
+      }).catch(()=>{});
+    }
+  });
+  socket.on('new_message',data=>{
+    loadInbox();
+    if(data?.jid===state.activeJid) openChat(state.activeJid,false);
+  });
+  socket.on('master_ai_status',data=>{
+    state.masterPaused=Boolean(data.paused);
+    $('#masterAi').checked=!state.masterPaused;
+    $('#masterAiLabel').textContent=state.masterPaused?'Paused':'On';
+  });
+  socket.on('sync_complete',()=>{
+    loadInbox();
+    loadOverview();
+  });
+}
+
+// Background Auto-Refresh Engine (SWR + Live Sync)
+let bgRefreshTimer=null;
+let isRefreshing=false;
+let lastInboxHash='';
+let lastThreadHash='';
+
+async function runBackgroundSync(reason='interval'){
+  if(document.hidden && reason==='interval') return;
+  if(isRefreshing) return;
+  isRefreshing=true;
+  try {
+    const cur=state.view;
+    if(cur==='quick-message'){
+      await loadQuickQueue();
+    } else if(cur==='campaign'){
+      await loadCampaignQueue();
+    } else if(cur==='inbox'){
+      const data=await api('/api/inbox').catch(()=>null);
+      if(data && (data.messages || data.inbox)){
+        const fresh=canonicalInbox(data.messages || data.inbox);
+        const hash=fresh.map(x=>`${x.jid}:${x.lastMessageAt}:${x.message}`).join('|');
+        if(hash!==lastInboxHash){
+          lastInboxHash=hash;
+          state.inbox=fresh;
+          renderInboxBadge();
+          $('#conversationSubtitle').textContent=`${state.inbox.length} conversations`;
+          renderChatList();
+        }
+      }
+      if(state.activeJid){
+        const threadData=await api(`/api/inbox/${encodeURIComponent(state.activeJid)}/thread?refresh=0`).catch(()=>null);
+        if(threadData && (threadData.thread || threadData.messages)){
+          const newThread=threadData.thread || threadData.messages || [];
+          const thash=newThread.map(m=>`${m.id||m.messageId}:${m.status}:${m.timestamp}`).join('|');
+          if(thash!==lastThreadHash){
+            lastThreadHash=thash;
+            state.activeThread=newThread;
+            renderThread();
+            updateProfile();
+          }
+        }
+      }
+    } else if(cur==='overview'){
+      await loadConnection().catch(()=>{});
+    }
+  } catch(e) {
+    console.debug('Background sync:', e.message);
+  } finally {
+    isRefreshing=false;
+  }
+}
+
+function startBackgroundSync(){
+  if(bgRefreshTimer) clearInterval(bgRefreshTimer);
+  bgRefreshTimer=setInterval(()=>runBackgroundSync('interval'), 3000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') runBackgroundSync('visible');
+  });
+  window.addEventListener('focus',()=>runBackgroundSync('focus'));
+}
+startBackgroundSync();
 Promise.all([loadConnection(),loadMasterAi(),loadInbox(),loadContacts(),loadOverview()]).then(iconRefresh);
 // Inbox filters are operational, not decorative: incoming awaiting a manual
 // reply, and chats currently eligible for AI (chat-level setting only).
@@ -219,3 +431,4 @@ if(messageInputElement){
   window.addEventListener('resize',()=>autoGrowMessageInput(messageInputElement));
   autoGrowMessageInput(messageInputElement);
 }
+syncWhatsAppTemplates();
