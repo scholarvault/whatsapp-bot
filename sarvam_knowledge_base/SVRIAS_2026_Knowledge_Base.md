@@ -8,17 +8,23 @@
 
 ---
 
-## 1. Executive Summary & The "Why Us" Mission
-### What is SVRIAS 2026?
-SVRIAS 2026 is an international academic research summit established to fight predatory conferences and academic paper mills. It serves as a gold standard for authentic peer-reviewed publication, low-carbon virtual presentation, and ethical artificial intelligence governance.
+## 1. What is ScholarVault? (Identity & Mission)
+### What is ScholarVault?
+ScholarVault is an **Academic Intelligence and Research Integrity platform**, proudly **rooted in India** and recognized by DPIIT under the Startup India initiative (IN-0326-9418IG). 
 
-### The Problem: Predatory Conferences & Paper Mills
-Every year, thousands of researchers and postgraduate scholars fall victim to unindexed predatory conferences run by anonymous commercial associations. These cartels collect hefty registration fees, conduct fake 24-hour peer reviews, and fail to provide legitimate indexing, resulting in retracted papers, loss of institutional funding, and disqualification of doctoral theses.
+We are building sovereign academic infrastructure to protect researchers, universities, and students from predatory conferences, unindexed journals, and academic paper mills. Through our proprietary **18-point SCVS (ScholarVault Conference Verification Score)** forensic audit, ScholarVault verifies academic summits to ensure genuine double-blind peer review, verified editorial boards, and legitimate Crossref DOI preservation.
 
-### The ScholarVault Solution
-ScholarVault was founded as a DPIIT-recognized academic integrity platform. Every paper accepted at SVRIAS 2026 is audited by ScholarVault's 18-point SCVS (ScholarVault Conference Verification Score) forensic system before being approved for presentation and archival.
+### Core Pillars of ScholarVault:
+1. **Academic Intelligence:** AI-powered verification of conferences, journals, and publication ethics.
+2. **Rooted in India, Built for the World:** Empowering Indian researchers and scholars globally with trusted, high-reputation publication avenues.
+3. **Anti-Paper-Mill Protection:** Safeguarding scholars against fake indexing cartels and predatory publishers that drain research funds.
+4. **Permanent Digital Archival:** Ensuring genuine Crossref DOIs, registered ISBN proceedings, and COPE compliance.
 
 ---
+
+## 2. About SVRIAS 2026 (The Summit)
+### What is SVRIAS 2026?
+SVRIAS 2026 is the **ScholarVault Research Integrity & Academic Summit 2026**, an international flagship conference organized by ScholarVault. It serves as a gold standard for authentic peer-reviewed publication, low-carbon virtual presentation, and ethical artificial intelligence governance.
 
 ## 2. The 18-Point SCVS Forensic Audit
 Every submission and proceedings volume passes the 18-point SCVS integrity audit:
