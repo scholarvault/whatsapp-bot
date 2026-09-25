@@ -78,7 +78,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 app.post('/api/auth/logout', (req, res) => { res.clearCookie('sv_crm_session', { path: '/' }); res.json({ success: true }); });
 app.get('/api/auth/status', (req, res) => res.json({ success: true, signedIn: Boolean(crmSessionFor(req)), user: crmSessionFor(req)?.u || '' }));
-app.use('/api', (req, res, next) => req.path.startsWith('/auth/') || req.path === '/email/webhooks/brevo' ? next() : crmAuthRequired(req, res, next));
+app.use('/api', (req, res, next) => req.path.startsWith('/auth/') || req.path === '/email/webhooks/brevo' || req.path.startsWith('/sarvam/') ? next() : crmAuthRequired(req, res, next));
 const crmStaticOptions = {
     etag: false,
     lastModified: false,
@@ -1442,6 +1442,82 @@ app.post('/api/inbox-reply', async (req, res) => {
     const success = await sendSmartMessage(jid, instance || getDefaultInstanceName(), message, null, null, true, 'agent');
     res.json({ success });
 });
+
+// ==========================================
+// SARVAM VOICE AGENT AUTOMATED WHATSAPP DESK
+// ==========================================
+app.post('/api/sarvam/send-brochure', async (req, res) => {
+    try {
+        const rawPhone = req.body?.phone || req.body?.user_identifier || req.body?.caller_id || req.body?.user_id;
+        const callerName = req.body?.name || req.body?.caller_name || 'Professor / Researcher';
+        
+        if (!rawPhone) {
+            console.warn('[Sarvam Voice AI] No phone number received in send-brochure request');
+            return res.status(400).json({ success: false, error: 'Phone number is required' });
+        }
+
+        // Normalize phone number (strip non-digits, guarantee 91 country code for 10-digit Indian numbers)
+        let cleanPhone = String(rawPhone).replace(/[^\d]/g, '');
+        if (cleanPhone.length === 10) {
+            cleanPhone = '91' + cleanPhone;
+        }
+
+        const targetJid = `${cleanPhone}@s.whatsapp.net`;
+        console.log(`[Sarvam Voice AI] 🚀 Dispatched automated WhatsApp Brochure to ${targetJid} (${callerName})`);
+
+        const brochureMessage = 
+`Hello ${callerName}! 👋
+
+Thank you for speaking with our *ScholarVault Academic Desk* helpline.
+
+As requested during your call, here are the official details and materials for *SVRIAS 2026* (*ScholarVault Research Integrity & Academic Summit*):
+
+📅 *Summit Date:* 14 November 2026 (100% Virtual Global Plenary via Zoom)
+⚡ *Editorial Review:* Rapid 2–4 Working Days (Rolling Double-Blind Review)
+🎓 *Abstract Intake:* 100% Free (₹0 Upfront)
+🏆 *Student Grants:* 10 Full (100%) Registration Fee Waivers Available
+📚 *Proceedings:* Registered ISBN (978-81-181597-0-4) + Permanent Zenodo DOI (CERN / OpenAIRE)
+
+📌 *Quick Links & Portals:*
+👉 *Submit Abstract / Call for Papers:* https://researchintegrity2026.scholarvault.in/submit-paper.html
+👉 *Official Summit Portal:* https://researchintegrity2026.scholarvault.in/
+👉 *Academic Intelligence Dashboard:* https://app.scholarvault.in/
+
+*ScholarVault Helpline & Support Desk:*
+📞 Helpline: 080 6426 1600
+💬 WhatsApp: +91 93449 00624
+📧 Email: conferences@scholarvault.in
+
+Feel free to reply directly to this WhatsApp message if you have any questions regarding tracks, manuscript formatting, or the 100% Student Fee Waiver Grant!
+
+— *Dr. Radhika & The ScholarVault Academic Team*
+🌐 scholarvault.in`;
+
+        const instance = getDefaultInstanceName();
+        const success = await sendSmartMessage(targetJid, instance, brochureMessage, null, null, true, 'bot');
+
+        return res.json({
+            success: true,
+            status: success ? 'sent' : 'queued',
+            recipient: cleanPhone,
+            message: 'Brochure and summit links dispatched to WhatsApp successfully'
+        });
+    } catch (err) {
+        console.error('[Sarvam Voice AI] Error sending brochure:', err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Sarvam Post-Call Webhook logger
+app.post('/api/sarvam/webhook', async (req, res) => {
+    try {
+        console.log('[Sarvam Call Webhook] Received call completion event:', JSON.stringify(req.body).slice(0, 300));
+        res.json({ received: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 // CRM Contacts APIs
 app.get('/api/contacts', (req, res) => res.json({ success: true, contacts: getDb('contacts') }));
