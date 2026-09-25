@@ -11,7 +11,8 @@
 - Trust & Verification Score: 92/100 (10,000+ researchers engaged, active since 2022)  
 
 **Official Portals & Domains:**  
-- Corporate & Academic Intelligence Portal: https://scholarvault.in  
+- Main Corporate & Intelligence Portal: https://scholarvault.in  
+- Dedicated Academic Intelligence Dashboard: https://app.scholarvault.in (Discover, Submit & Manage)  
 - Official Summit Portal: https://researchintegrity2026.scholarvault.in  
 - Official Call for Papers Zenodo DOI Record: https://doi.org/10.5281/zenodo.22871615  
 
@@ -31,6 +32,14 @@ To eradicate predatory conferences, commercial paper mills, and fabricated citat
 
 ### Our Vision
 To establish India as a global benchmark of academic integrity and trusted scientific research, empowering researchers, universities, and students to publish with pride and uncompromised ethics.
+
+### The ScholarVault Academic Intelligence Dashboard (`app.scholarvault.in`)
+Researchers, students, and institutions manage their entire academic publishing journey from our dedicated web application at **https://app.scholarvault.in**:
+- **Discover:** Search verified conferences, filter accredited summits, and verify publication authenticity before spending funds.
+- **Find:** Uncover legitimate calls for papers, student research grants (like the 100% fee waiver), and technical reviewer roles.
+- **Submit:** Submit abstracts and full manuscripts seamlessly with automated formatting and plagiarism pre-checks.
+- **Manage from One Place:** Track double-blind peer review status in real-time, view editorial decisions, download acceptance letters, and access your verified digital credentials and Zenodo DOIs.
+- **Powered & Protected:** Every interaction is safeguarded by our 18-point SCVS forensic engine, protecting authors against paper-mill piracy and predatory clones.
 
 ---
 
@@ -122,3 +131,6 @@ ScholarVault awards **10 Full Student Research Grants** offering a **100% regist
 
 ### Q: Where will my paper be published and archived?
 **A:** In the official ISBN proceedings volume and archived with a permanent Zenodo DOI hosted by CERN's open science infrastructure.
+
+### Q: What is the ScholarVault Dashboard (app.scholarvault.in)?
+**A:** It is our dedicated Academic Intelligence portal where scholars can discover verified conferences, submit their research, track double-blind peer review status in real-time, and manage all their publications and certificates in one secure, protected dashboard.
