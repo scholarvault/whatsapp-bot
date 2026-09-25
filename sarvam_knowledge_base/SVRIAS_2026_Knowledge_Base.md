@@ -1,140 +1,124 @@
-# SVRIAS 2026 Official Knowledge Base & Reference Document
-**Summit Name:** ScholarVault Research Integrity & Academic Summit 2026 (SVRIAS 2026)  
-**Host Organization:** ScholarVault Academic Infrastructure & Integrity Network  
-**Accreditations & Recognitions:** DPIIT-Recognized Startup India Initiative (IN-0326-9418IG), MSME UDYAM-TN-02-0457961, COPE Compliant  
-**Official Portal:** https://researchintegrity2026.scholarvault.in  
-**Main Desk Email:** conferences@scholarvault.in  
-**Official Helpline:** +91 80 6426 1600  
+# SVRIAS 2026 & ScholarVault Official Master Knowledge Base
+**Organization:** ScholarVault Academic Intelligence & Research Integrity Network  
+**Headquarters & Origin:** Tamil Nadu, India (Proudly Rooted in India, Built for the World)  
+**Founder:** Shyam Sundar (Founder & CEO, ScholarVault)  
+**Summit Date:** 14 November 2026 (100% Virtual Global Plenary via Zoom)  
+
+**Accreditations & Government Recognitions:**  
+- DPIIT Recognized Startup India Initiative (IN-0326-9418IG)  
+- Government of India MSME Registered (UDYAM-TN-02-0457961)  
+- Committee on Publication Ethics (COPE) Compliant  
+- Trust & Verification Score: 92/100 (10,000+ researchers engaged, active since 2022)  
+
+**Official Portals & Domains:**  
+- Corporate & Academic Intelligence Portal: https://scholarvault.in  
+- Official Summit Portal: https://researchintegrity2026.scholarvault.in  
+- Official Call for Papers Zenodo DOI Record: https://doi.org/10.5281/zenodo.22871615  
+
+**Contact Helplines & Desks:**  
+- AI Voice Helpline (DID): 080 6426 1600 (+91 80 6426 1600)  
+- Official WhatsApp Support Desk & Direct Mobile: +91 86101 00624  
+- Summit Desk Email: conferences@scholarvault.in  
+- General Inquiries & Grievances: info@scholarvault.in / support@scholarvault.in  
 
 ---
 
-## 1. What is ScholarVault? (Identity & Mission)
-### What is ScholarVault?
-ScholarVault is an **Academic Intelligence and Research Integrity platform**, proudly **rooted in India** and recognized by DPIIT under the Startup India initiative (IN-0326-9418IG). 
+## 1. Who We Are: The ScholarVault Identity
+ScholarVault is India's premier **Academic Intelligence and Research Integrity platform**. Founded in Tamil Nadu, India by **Shyam Sundar**, ScholarVault develops sovereign AI tools, publication forensics, and verified conference infrastructure designed to protect researchers from predatory conferences and paper mills.
 
-We are building sovereign academic infrastructure to protect researchers, universities, and students from predatory conferences, unindexed journals, and academic paper mills. Through our proprietary **18-point SCVS (ScholarVault Conference Verification Score)** forensic audit, ScholarVault verifies academic summits to ensure genuine double-blind peer review, verified editorial boards, and legitimate Crossref DOI preservation.
+### Our Mission
+To eradicate predatory conferences, commercial paper mills, and fabricated citation cartels that drain public research grants and exploit PhD scholars in India and developing economies. We provide transparent, verified double-blind peer review, permanent digital archival, and authentic academic recognition.
 
-### Core Pillars of ScholarVault:
-1. **Academic Intelligence:** AI-powered verification of conferences, journals, and publication ethics.
-2. **Rooted in India, Built for the World:** Empowering Indian researchers and scholars globally with trusted, high-reputation publication avenues.
-3. **Anti-Paper-Mill Protection:** Safeguarding scholars against fake indexing cartels and predatory publishers that drain research funds.
-4. **Permanent Digital Archival:** Ensuring genuine Crossref DOIs, registered ISBN proceedings, and COPE compliance.
+### Our Vision
+To establish India as a global benchmark of academic integrity and trusted scientific research, empowering researchers, universities, and students to publish with pride and uncompromised ethics.
 
 ---
 
-## 2. About SVRIAS 2026 (The Summit)
-### What is SVRIAS 2026?
-SVRIAS 2026 is the **ScholarVault Research Integrity & Academic Summit 2026**, an international flagship conference organized by ScholarVault. It serves as a gold standard for authentic peer-reviewed publication, low-carbon virtual presentation, and ethical artificial intelligence governance.
+## 2. Archival, DOI & Indexing Policy (100% Genuine, No Fake Promises)
+ScholarVault stands strictly against fake "guaranteed Scopus" claims made by predatory conference organizers.
 
-## 2. The 18-Point SCVS Forensic Audit
-Every submission and proceedings volume passes the 18-point SCVS integrity audit:
+- **Archival & DOI:** All accepted and presented papers are archived in **Zenodo** (the European Open Science repository hosted by CERN) with permanent, citable **Zenodo DOIs** (`10.5281/zenodo.*`).
+- **Proceedings:** Official proceedings are published with registered **ISBN** cataloging.
+- **Strict Anti-Paper-Mill Policy on Indexing:** We **never** promise automated Scopus or Web of Science indexing. Indexing outcomes depend entirely on publisher editorial reviews, independent post-publication audits, and journal criteria. We prioritize genuine, rigorous peer review over predatory marketing promises.
+
+---
+
+## 3. The 18-Point SCVS Forensic Audit Protocol
+Every paper accepted by ScholarVault or presented at SVRIAS 2026 passes our proprietary 18-point SCVS integrity audit:
 1. **Double-Blind Peer Review:** Minimum two independent blind reviewer reports per paper.
-2. **Editorial Board Identity Verification:** Institutional email verification and ORCID check for all committee chairs.
-3. **Plagiarism & Similarity Screen:** Cross-checked with Turnitin/iThenticate (similarity threshold below 15%).
+2. **Editorial Board Identity Verification:** Institutional email verification and ORCID checks for all committee members.
+3. **Plagiarism & Similarity Screen:** Cross-checked with Turnitin/iThenticate (similarity strictly under 15%).
 4. **AI-Generated Text Forensics:** Detection of unverified synthetic text and hallucinated citations.
 5. **CRediT Taxonomy Compliance:** Explicit contributor role definitions for every co-author.
 6. **Data Provenance & Availability:** Open dataset or verified simulation repository links required.
 7. **Institutional Affiliation Check:** Validation of author department and institutional domain.
 8. **Citation Cartel Detection:** Identification of reciprocal citation circles and excessive self-citations.
-9. **Permanent Crossref DOI Registration:** Each paper receives an authentic, persistent DOI prefix.
+9. **Permanent Zenodo DOI Assignment:** Persistent digital preservation via CERN's Zenodo open-science repository.
 10. **ISBN Registered Proceedings:** Official proceedings published with registered ISBN cataloging.
 11. **COPE Guideline Adherence:** Strict compliance with Committee on Publication Ethics codes of conduct.
 12. **Conflict of Interest Disclosure:** Mandatory declaration of commercial or personal conflicts.
 13. **Reproducibility Verification:** Verification of experimental setup and software parameters.
 14. **No Guaranteed Acceptance Policy:** Absolute ban on "pay-to-publish" or guaranteed acceptance schemes.
-15. **Transparent Acceptance Rates:** Typical selective acceptance rate between 28% and 34%.
-16. **Permanent Open-Access Preservation:** Archival in decentralized, open scholarly repositories.
+15. **Transparent Acceptance Rates:** Selective acceptance rate between 28% and 34%.
+16. **Open-Access Preservation:** Free, unpaywalled global access to published proceedings.
 17. **Retraction & Correction Protocol:** Clear mechanism for post-publication errata.
 18. **Anti-Paper-Mill Signature Analysis:** Automated graph checks to block mass-generated manuscript batches.
 
 ---
 
-## 3. Summit Tracks & Focus Areas
-SVRIAS 2026 accepts extended abstracts, full technical papers, and ethical case studies across six multidisciplinary tracks:
+## 4. Summit Details: SVRIAS 2026
+**Full Title:** ScholarVault Research Integrity & Responsible AI Summit 2026  
+**Date:** 14 November 2026 (10:00 AM – 5:15 PM IST)  
+**Format:** 100% Virtual / Online via Zoom (Global participation without flight, hotel, or visa costs).  
+**Theme:** Research Integrity in the Age of Generative AI & Responsible Governance.  
+**Review Decision:** 2 to 4 business days rolling double-blind review.  
 
-- **Track 1: AI Ethics, Algorithmic Governance & Regulatory Frameworks**
-  - EU AI Act, international governance frameworks, algorithmic transparency, automated decision-making liability.
-- **Track 2: Research Integrity & Authorship in the Generative AI Era**
-  - Proper disclosure of LLM tools, CRediT authorship attribution, ghostwriting prevention, intellectual property.
-- **Track 3: Responsible AI Frameworks, Bias Detection & Explainable Systems**
-  - Mitigation of demographic bias, explainable AI (XAI), fairness metrics in machine learning, model safety.
-- **Track 4: Peer Review Integrity, Paper-Mill Forensics & Scientific Fraud Prevention**
-  - Graph-based fraud detection, automated image tampering identification, whistleblower protection, reviewer ethics.
-- **Track 5: Data Privacy, Reproducibility & Provenance in Scientific Computing**
-  - Differential privacy, federated learning integrity, verifiable computation, open science workflows.
-- **Track 6: Ethical Implications of Emerging Technologies**
-  - Biotechnology ethics, quantum security implications, autonomous systems accountability.
-
----
-
-## 4. Key Dates & Rapid Review Timeline
-- **Call for Papers Opens:** Active
-- **Abstract Submission Deadline:** Rolling Submissions (Early Bird closing soon)
-- **Editorial Review Decision:** 2 to 4 business days for rapid editorial pre-screening; full peer review within 14 days.
-- **Camera-Ready & Registration Deadline:** 10 days post acceptance notification.
-- **Summit Dates:** Scheduled for November 2026 (100% Virtual / Low-Carbon Online via Zoom).
+### Official Tracks:
+- **Track 1:** AI Ethics, Algorithmic Governance & Regulatory Frameworks
+- **Track 2:** Research Integrity & Authorship in the Generative AI Era (CRediT attribution)
+- **Track 3:** Responsible AI Frameworks, Bias Detection & Explainable Systems
+- **Track 4:** Peer Review Integrity, Paper-Mill Forensics & Scientific Fraud Prevention
+- **Track 5:** Data Privacy, Reproducibility & Provenance in Scientific Computing
+- **Track 6:** Ethical Implications of Emerging Technologies (Biotech, Quantum, Autonomous Systems)
 
 ---
 
-## 5. Registration Fees & Pricing Structure
-Because SVRIAS 2026 is 100% virtual, participants save completely on international flights, hotels, and visas.
-
-- **Indian Student / Research Scholar:** ₹2,500 INR (Abstract + Oral Presentation + Certificate)
-- **Indian Faculty / Academician:** ₹4,500 INR (Full Paper / Oral Presentation + ISBN Proceedings)
-- **Indian Industry / Corporate Delegate:** ₹7,500 INR
-- **International Student / Scholar:** $75 USD
-- **International Faculty / Academician:** $150 USD
-- **International Industry Delegate:** $250 USD
-- **Listener / Attendee Only:** ₹999 INR / $25 USD
+## 5. Official Registration Fees (As Listed on Website)
+- **Abstract Submission:** Free (₹0) — 2 to 4 working day rolling double-blind review
+- **Student & Early-Career Presenter:** ₹799 INR (Full conference access, presentation slot, verified digital credentials)
+- **Faculty & Academic Researcher:** ₹1,499 INR (Faculty pass, presentation slot, toolkit)
+- **Industry / Corporate Delegate:** ₹2,999 INR / $75 USD
+- **International Presenter:** $49 – $75 USD
 
 ---
 
 ## 6. Student Research Grants (100% Fee Waiver)
-ScholarVault awards **10 Full Student Research Grants** providing a **100% registration fee waiver** for high-impact submissions.
-
-### Eligibility Criteria:
-1. The lead author must be an enrolled undergraduate, postgraduate, or PhD scholar.
-2. Must submit a valid university/college student identity card or enrollment letter.
-3. The submitted paper or abstract must score in the top 10% during editorial peer review.
-4. Topics focusing on research ethics, open source integrity tools, or responsible AI receive priority consideration.
-
-### How to Apply:
-Select "Apply for 100% Student Grant" on the paper submission portal:
-👉 https://researchintegrity2026.scholarvault.in/submit-paper.html
+ScholarVault awards **10 Full Student Research Grants** offering a **100% registration fee waiver** for top student and PhD scholar submissions.
+- **Eligibility:** Enrolled undergraduate, postgraduate, or PhD student with verified student ID; submission must rank in the top 10% during editorial review.
+- **Application Portal:** https://researchintegrity2026.scholarvault.in/submit-paper.html
 
 ---
 
 ## 7. Reviewer & Technical Program Committee (TPC)
-We invite qualified professors, postdocs, and senior industry scientists to join the Technical Program Committee.
-
-### Benefits for Reviewers:
-- Official Certificate of Academic Contribution & Editorial Leadership recognized by ScholarVault.
-- 50% waiver on author registration if they also submit a paper.
-- Priority invitation to session chair roles during the virtual summit.
-- Maximum workload is capped at 1 to 2 manuscript reviews to prevent reviewer fatigue.
-
-### How to Join:
-Apply directly at:
-👉 https://researchintegrity2026.scholarvault.in/committee.html
+- Qualified professors, postdocs, and senior researchers can join the Technical Review Committee.
+- **Benefits:** Official Certificate of Academic Contribution recognized by ScholarVault, author fee waiver on submissions, and workload strictly capped at 1 to 2 manuscript reviews.
+- **Application Portal:** https://researchintegrity2026.scholarvault.in/committee.html
 
 ---
 
-## 8. Common Frequently Asked Questions (Voice Agent Quick Reference)
+## 8. Common Phone Questions (Quick Reference for AI Voice Agent)
 
-### Q: Is SVRIAS 2026 held offline or online?
-**A:** SVRIAS 2026 is completely 100% virtual and hosted over Zoom. Authors can present from any country without travel, hotel, or visa expenses.
+### Q: What is ScholarVault?
+**A:** ScholarVault is an Academic Intelligence and research integrity platform, proudly rooted in Tamil Nadu, India, and recognized by DPIIT under Startup India. We build sovereign academic infrastructure to protect researchers from predatory paper mills and fake conferences through our proprietary 18-point SCVS audit.
 
-### Q: Will my paper be published with a DOI?
-**A:** Yes. All accepted and registered papers are archived with a permanent Crossref DOI and published in the official ISBN proceedings volume.
+### Q: Who is the founder of ScholarVault?
+**A:** ScholarVault was founded by Shyam Sundar, an Indian innovator and researcher committed to defending academic integrity and supporting scholars against predatory publishing networks.
 
-### Q: How long does peer review take?
-**A:** Initial editorial pre-screening takes 2 to 4 business days. Detailed double-blind technical peer review is completed within 14 days.
+### Q: What are your contact numbers and email?
+**A:** You can call our voice desk at 080 6426 1600, message our direct WhatsApp support desk at +91 86101 00624, or email conferences@scholarvault.in.
 
-### Q: What is the acceptance rate?
-**A:** To maintain SCVS integrity standards, SVRIAS 2026 maintains a selective acceptance rate of approximately 28% to 34%.
+### Q: Is this conference Scopus indexed?
+**A:** We strictly follow Committee on Publication Ethics (COPE) guidelines and never make fake promises of guaranteed Scopus indexing. All accepted papers receive a permanent Zenodo DOI and official registered ISBN proceedings, with independent post-conference indexing submission.
 
-### Q: How do I submit my abstract?
-**A:** You can submit your 250-to-500-word abstract online at `https://researchintegrity2026.scholarvault.in/submit-paper.html`.
-
-### Q: Who can I contact for payment or invoice receipts?
-**A:** Authors can write to `conferences@scholarvault.in` or speak with the ScholarVault Academic Desk helpline at `+91 80 6426 1600`.
+### Q: Where will my paper be published and archived?
+**A:** In the official ISBN proceedings volume and archived with a permanent Zenodo DOI hosted by CERN's open science infrastructure.
