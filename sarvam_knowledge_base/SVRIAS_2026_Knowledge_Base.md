@@ -5,10 +5,10 @@
 **Summit Date:** 14 November 2026 (100% Virtual Global Plenary via Zoom)  
 
 **Accreditations & Government Recognitions:**  
-- DPIIT Recognized Startup India Initiative (IN-0326-9418IG)  
+- DPIIT Recognized Startup India Initiative (Registered 2026, Certificate IN-0326-9418IG)  
 - Government of India MSME Registered (UDYAM-TN-02-0457961)  
 - Committee on Publication Ethics (COPE) Compliant  
-- Trust & Verification Score: 92/100 (10,000+ researchers engaged, active since 2022)  
+- Academic Network: 1,000+ verified researchers and scholars  
 
 **Official Portals & Domains:**  
 - Main Corporate & Intelligence Portal: https://scholarvault.in  
