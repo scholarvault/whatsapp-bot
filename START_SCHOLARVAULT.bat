@@ -1,79 +1,70 @@
 @echo off
 chcp 65001 >nul 2>&1
-title ScholarVault - Master Launcher
+title ScholarVault - Launcher
 color 0A
 
 echo.
 echo  ========================================================
-echo       ScholarVault Campaign Command Center
-echo              ONE-CLICK LAUNCHER
+echo             ScholarVault WhatsApp CRM Launcher
 echo  ========================================================
 echo.
 
-REM --- Step 0: Request Admin if needed for Redis ---
-net session >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo  [INFO] Requesting Administrator access for Redis...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b
-)
-
-REM --- Step 1: Redis ---
-echo  [1/5] Checking Redis...
-sc query Redis | findstr /i "RUNNING" >nul 2>&1
+REM --- Step 1: Redis Background Service ---
+echo  [1/3] Checking Redis service...
+sc query Redis 2>nul | findstr /i "RUNNING" >nul 2>&1
 if %ERRORLEVEL%==0 (
-    echo        [OK] Redis is already running.
+    echo        [OK] Redis is running.
 ) else (
     echo        Starting Redis service...
     net start Redis >nul 2>&1
     if %ERRORLEVEL%==0 (
         echo        [OK] Redis started.
     ) else (
-        echo        [WARN] Could not start Redis. You may need to start it manually.
+        echo        [INFO] Redis is already started or managed as a background service.
     )
 )
 echo.
 
-REM --- Step 2: Listmonk retirement ---
-echo  [2/5] Listmonk is retired from normal CRM operations.
-echo        [OK] Skipped. Its local files remain untouched for recovery.
+REM --- Step 2: Evolution API (Port 8080) ---
+echo  [2/3] Checking Evolution API (Port 8080)...
+netstat -aon | findstr ":8080" | findstr "LISTENING" >nul 2>&1
+if %ERRORLEVEL%==0 (
+    echo        [OK] Evolution API is already active on port 8080.
+) else (
+    echo        Launching Evolution API...
+    start "Evolution API" /D "C:\Users\Shyam\evolution-api" cmd /k "npm run start"
+    echo        Waiting for Evolution API to initialize...
+    timeout /t 6 /nobreak >nul
+    echo        [OK] Evolution API launched.
+)
 echo.
 
-REM --- Step 3: Evolution API ---
-echo  [3/5] Starting Evolution API on port 8080...
-start "Evolution API" /D "C:\Users\Shyam\evolution-api" cmd /k "npm run start"
-echo        [OK] Evolution API launched.
-echo.
-
-REM --- Wait for Evolution API to boot ---
-echo  [..] Waiting 15 seconds for Evolution API to initialize...
-timeout /t 15 /nobreak >nul
-echo        [OK] Services should be ready.
-echo.
-
-REM --- Step 4: Campaign Server ---
-echo  [4/5] Starting Campaign Server on port 3000...
-start "ScholarVault Campaign Server" /D "C:\Users\Shyam\Scholar Vault 2\WhatsApp Campaign" cmd /k "node server.js"
-echo        [OK] Campaign Server launched.
+REM --- Step 3: Campaign & CRM Server (Port 3000) ---
+echo  [3/3] Checking Campaign Server (Port 3000)...
+netstat -aon | findstr ":3000" | findstr "LISTENING" >nul 2>&1
+if %ERRORLEVEL%==0 (
+    echo        [OK] Campaign Server is already running on port 3000.
+) else (
+    echo        Launching Campaign Server...
+    start "ScholarVault Campaign Server" /D "C:\Users\Shyam\Scholar Vault 2\WhatsApp Campaign" cmd /k "node server.js"
+    timeout /t 3 /nobreak >nul
+    echo        [OK] Campaign Server launched.
+)
 echo.
 
 REM --- Open Browser ---
-echo  Waiting 5 seconds for Campaign Server to boot...
-timeout /t 5 /nobreak >nul
+echo  Opening CRM in your browser...
 start http://localhost:3000/crm
 
 echo.
 echo  ========================================================
-echo                   ALL SYSTEMS GO!
+echo                     CRM READY!
 echo  --------------------------------------------------------
-echo   CRM:          http://localhost:3000/crm
-echo   Legacy UI:    http://localhost:3000/legacy
-echo   Evolution:    http://localhost:8080
-echo   Listmonk:     Retired from normal operations (local archive retained)
-echo   Cloudflare:    Disabled for local-only work
+echo   CRM Dashboard:  http://localhost:3000/crm
+echo   Evolution API:  http://localhost:8080
 echo  ========================================================
 echo.
-echo  Each service is running in its own window.
-echo  Close this launcher window anytime - services stay alive.
+echo  You can close this window now. Services will continue running.
 echo.
-pause
+timeout /t 4 >nul
+exit
