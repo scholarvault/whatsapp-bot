@@ -15,21 +15,25 @@ sc query Redis 2>nul | findstr /i "RUNNING" >nul 2>&1
 if %ERRORLEVEL%==0 (
     echo        [OK] Redis is running.
 ) else (
-    echo        Starting Redis service...
     net start Redis >nul 2>&1
     if %ERRORLEVEL%==0 (
         echo        [OK] Redis started.
     ) else (
-        echo        [INFO] Redis is already started or managed as a background service.
+        echo        [INFO] Redis is already active as a background service.
     )
 )
 echo.
 
 REM --- Step 2: Evolution API (Port 8080) ---
 echo  [2/3] Checking Evolution API (Port 8080)...
+set "EVO_RUNNING=0"
 netstat -aon | findstr ":8080" | findstr "LISTENING" >nul 2>&1
-if %ERRORLEVEL%==0 (
-    echo        [OK] Evolution API is already active on port 8080.
+if %ERRORLEVEL%==0 set "EVO_RUNNING=1"
+tasklist /FI "WINDOWTITLE eq Evolution API*" 2>nul | findstr /i "cmd.exe" >nul 2>&1
+if %ERRORLEVEL%==0 set "EVO_RUNNING=1"
+
+if "%EVO_RUNNING%"=="1" (
+    echo        [OK] Evolution API is already active or starting on port 8080.
 ) else (
     echo        Launching Evolution API...
     start "Evolution API" /D "C:\Users\Shyam\evolution-api" cmd /k "npm run start"
@@ -41,8 +45,13 @@ echo.
 
 REM --- Step 3: Campaign & CRM Server (Port 3000) ---
 echo  [3/3] Checking Campaign Server (Port 3000)...
+set "CRM_RUNNING=0"
 netstat -aon | findstr ":3000" | findstr "LISTENING" >nul 2>&1
-if %ERRORLEVEL%==0 (
+if %ERRORLEVEL%==0 set "CRM_RUNNING=1"
+tasklist /FI "WINDOWTITLE eq ScholarVault Campaign Server*" 2>nul | findstr /i "cmd.exe" >nul 2>&1
+if %ERRORLEVEL%==0 set "CRM_RUNNING=1"
+
+if "%CRM_RUNNING%"=="1" (
     echo        [OK] Campaign Server is already running on port 3000.
 ) else (
     echo        Launching Campaign Server...
@@ -64,7 +73,6 @@ echo   CRM Dashboard:  http://localhost:3000/crm
 echo   Evolution API:  http://localhost:8080
 echo  ========================================================
 echo.
-echo  You can close this window now. Services will continue running.
-echo.
-timeout /t 4 >nul
+echo  Closing launcher window...
+timeout /t 3 >nul
 exit

@@ -3902,29 +3902,13 @@ app.post('/api/multichannel/campaigns/:id/cancel', (req, res) => {
 setupSendPulse(app, getDb, saveDb);
 
 async function autoStartEvolution() {
-    // Only attempt auto-start on Windows local machines
-    if (process.platform !== 'win32') {
-        console.log('[Auto-Start] Running in cloud environment. Skipping local Evolution API auto-start.');
-        return;
-    }
-    
+    // Evolution API startup is handled by START_SCHOLARVAULT.bat
     try {
-        // Check if Evolution API is already active
         const axios = require('axios');
         await axios.get((process.env.EVO_API_URL || 'http://localhost:8080'), { timeout: 2000 });
-        console.log('[Auto-Start] Evolution API is already running on port 8080.');
-    } catch (e) {
-        // Port 8080 is offline, spawn a new instance
-        try {
-            const { spawn } = require('child_process');
-            const evoPath = 'C:\\Users\\Shyam\\evolution-api';
-            console.log(`[Auto-Start] Evolution API not active. Spawning at ${evoPath}...`);
-            let evolutionProcess = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', 'npm run start'], { cwd: evoPath, detached: true, windowsHide: false });
-            evolutionProcess.unref();
-            console.log(`[Auto-Start] Evolution API launched successfully.`);
-        } catch (spawnErr) {
-            console.error('[Auto-Start] Failed to start Evolution API process:', spawnErr.message);
-        }
+        console.log('[Auto-Start] Evolution API is active on port 8080.');
+    } catch (_) {
+        console.log('[Auto-Start] Evolution API is initializing or managed by launcher.');
     }
 }
 
