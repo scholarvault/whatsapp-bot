@@ -1,0 +1,243 @@
+{
+  "email_1786562243169_uqh1b": {
+    "id": "email_1786562243169_uqh1b",
+    "name": "AI health Conference",
+    "provider": "brevo",
+    "senderName": "",
+    "senderEmail": "",
+    "subject": "ICAHCR 2026 presentation slot Ready",
+    "htmlBody": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Your ICAHCR 2026 presentation slot</title>\n<style>\n  body { font-family: Georgia, 'Times New Roman', serif; color: #1a1a1a; background: #f5f5f5; margin: 0; padding: 20px; }\n  .email { max-width: 550px; margin: 0 auto; background: #ffffff; padding: 32px 28px; }\n  p { font-size: 15px; line-height: 1.7; margin-bottom: 16px; }\n  a { color: #1a1a1a; }\n  .small { font-size: 13px; color: #666; line-height: 1.6; }\n  hr { border: none; border-top: 1px solid #e0e0e0; margin: 24px 0; }\n  @media only screen and (max-width: 480px) {\n    .email { padding: 24px 18px; }\n    p { font-size: 14px; }\n  }\n</style>\n</head>\n<body>\n<div class=\"email\">\n\n<p>Hi {{name}},</p>\n\n<p>I'm reaching out because you submitted a paper to ICAHCR 2026 — thank you for that. Your paper is currently under review by our committee.</p>\n\n<p>I wanted to let you know that the conference is on <strong>August 22–23, 2026</strong>, and we have about 9 days left before it begins. Right now we still have presentation slots open for registered presenters, but they're filling quickly.</p>\n\n<p>Registration for students and scholars is <strong>₹2,500</strong>. You can complete it here:<br>\n<a href=\"https://aihealth.scholarvault.in/register\">https://aihealth.scholarvault.in/register</a></p>\n\n<p>If you'd like to see the full conference agenda before registering, it's available here:<br>\n<a href=\"https://aihealth.scholarvault.in/agenda\">https://aihealth.scholarvault.in/agenda</a></p>\n\n<p>A few things worth knowing:</p>\n\n<p>— All accepted papers are published in ISBN proceedings with a DOI for each paper.<br>\n— The conference is fully virtual, so you can present from anywhere.<br>\n— ICAHCR 2026 is ScholarVault Verified (Platinum, 92/100), so there are no hidden charges or predatory practices.</p>\n\n<p>If you have any questions about your paper status or registration, just reply to this email and I'll help you directly.</p>\n\n<p>Best regards,<br>\nThe ICAHCR 2026 Organising Team<br>\n<a href=\"https://aihealth.scholarvault.in/\">aihealth.scholarvault.in</a></p>\n\n<hr>\n\n<p class=\"small\">ICAHCR 2026 · AI in Healthcare & Clinical Research<br>\nAugust 22–23, 2026 · Virtual / Online<br>\nOrganised by ScholarVault · conferences@scholarvault.in<br>\n<a href=\"https://aihealth.scholarvault.in/refund\">Refund Policy</a> · <a href=\"https://aihealth.scholarvault.in/privacy\">Privacy Policy</a></p>\n\n<p class=\"small\">You're receiving this email because you submitted a paper to ICAHCR 2026.</p>\n\n</div>\n</body>\n</html>\n",
+    "textBody": "",
+    "audience": [
+      {
+        "email": "ssundar861@gmail.com",
+        "name": "Shyam Sundar R",
+        "jid": "918610100624@s.whatsapp.net",
+        "phone": "",
+        "country": "India",
+        "tags": [
+          "Hot Lead"
+        ],
+        "emailOptIn": false
+      },
+      {
+        "email": "kedarbadonkupar@karunya.edu.in",
+        "name": "Mr Kedar Nongdhar",
+        "jid": "email:kedarbadonkupar%40karunya.edu.in",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "abhigna818@gmail.com",
+        "name": "Abhigna Naik",
+        "jid": "email:abhigna818%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "goodrich3210@gmail.com",
+        "name": "Sathyamoorthy Ramachandran",
+        "jid": "email:goodrich3210%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "kethinenibhuvan2004@gmail.com",
+        "name": "Bhuvan Kethineni",
+        "jid": "email:kethinenibhuvan2004%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "anupama.pendela2006@gmail.com",
+        "name": "Anupama Pendela",
+        "jid": "email:anupama.pendela2006%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "kusumag1526@gmail.com",
+        "name": "Kusuma G",
+        "jid": "email:kusumag1526%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "lgeethalogeetha@gmail.com",
+        "name": "Logeetha S",
+        "jid": "email:lgeethalogeetha%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "pawarkn@rknec.edu",
+        "name": "Kashish Pawar",
+        "jid": "email:pawarkn%40rknec.edu",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "durgakambala5475@gmail.com",
+        "name": "Durga Kambala",
+        "jid": "email:durgakambala5475%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "phanisrideepthi99@gmail.com",
+        "name": "Phani Sri Deepthi Thota",
+        "jid": "email:phanisrideepthi99%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "isumani2005@gmail.com",
+        "name": "Idamakanti Venkata Naga Sumani",
+        "jid": "email:isumani2005%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "mouniakshya@gmail.com",
+        "name": "Atkuri Mouni Akshay",
+        "jid": "email:mouniakshya%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      },
+      {
+        "email": "rekhar08@gmail.com",
+        "name": "Rekha Ravindran Nair",
+        "jid": "email:rekhar08%40gmail.com",
+        "phone": "",
+        "country": "",
+        "tags": [],
+        "emailOptIn": false
+      }
+    ],
+    "delivery": [
+      {
+        "email": "ssundar861@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:24.106Z",
+        "providerMessageId": "<202608121917.24812096898@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "kedarbadonkupar@karunya.edu.in",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:24.459Z",
+        "providerMessageId": "<202608121917.81154463194@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "abhigna818@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:24.811Z",
+        "providerMessageId": "<202608121917.88806225713@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "goodrich3210@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:25.166Z",
+        "providerMessageId": "<202608121917.20118080198@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "kethinenibhuvan2004@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:25.517Z",
+        "providerMessageId": "<202608121917.80308021835@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "anupama.pendela2006@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:25.864Z",
+        "providerMessageId": "<202608121917.28833796806@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "kusumag1526@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:26.222Z",
+        "providerMessageId": "<202608121917.40680049627@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "lgeethalogeetha@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:26.570Z",
+        "providerMessageId": "<202608121917.95808609257@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "pawarkn@rknec.edu",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:26.911Z",
+        "providerMessageId": "<202608121917.29485960721@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "durgakambala5475@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:27.254Z",
+        "providerMessageId": "<202608121917.53402391888@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "phanisrideepthi99@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:27.600Z",
+        "providerMessageId": "<202608121917.80010874725@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "isumani2005@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:27.949Z",
+        "providerMessageId": "<202608121917.52689358894@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "mouniakshya@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:28.292Z",
+        "providerMessageId": "<202608121917.67958212382@smtp-relay.mailin.fr>"
+      },
+      {
+        "email": "rekhar08@gmail.com",
+        "status": "accepted",
+        "sentAt": "2026-08-12T19:17:28.638Z",
+        "providerMessageId": "<202608121917.20184001855@smtp-relay.mailin.fr>"
+      }
+    ],
+    "scheduledFor": "2026-08-12T19:17:23.170Z",
+    "status": "completed",
+    "createdAt": "2026-08-12T19:17:23.170Z",
+    "preflight": {
+      "counts": {
+        "eligible": 14,
+        "invalid": 0,
+        "unsubscribed": 0,
+        "duplicate": 0,
+        "recent": 0,
+        "missingOptIn": 0
+      }
+    },
+    "startedAt": "2026-08-12T19:17:23.173Z",
+    "completedAt": "2026-08-12T19:17:28.638Z"
+  }
+}

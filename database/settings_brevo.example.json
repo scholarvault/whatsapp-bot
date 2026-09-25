@@ -1,0 +1,7 @@
+{
+  "apiKey": "",
+  "senderName": "ScholarVault",
+  "senderEmail": "conferences@outreach.scholarvault.in",
+  "dailyLimit": 300,
+  "webhookUrl": ""
+}

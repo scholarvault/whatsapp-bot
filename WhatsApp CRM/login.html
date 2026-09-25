@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · ScholarVault CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{font-family:'DM Sans',sans-serif;color:#17213a;background:#f4f6fb}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;background:radial-gradient(circle at 15% 15%,#e6dcff 0,transparent 30%),radial-gradient(circle at 85% 90%,#d8f6ed 0,transparent 32%),#f5f7fb}.login{width:min(420px,calc(100% - 32px));padding:40px;border:1px solid #e3e7f0;border-radius:22px;background:#fff;box-shadow:0 24px 70px #16213b20}.brand{display:flex;align-items:center;gap:12px;margin-bottom:36px}.brand img{width:48px;height:48px;border-radius:12px;background:#181e31;object-fit:contain}.brand b{display:block;font:800 20px Manrope,sans-serif}.brand small{color:#68738b;letter-spacing:.08em;text-transform:uppercase;font-size:10px}h1{font:800 27px Manrope,sans-serif;margin:0 0 8px}p{color:#63708a;line-height:1.5;margin:0 0 28px}label{display:grid;gap:8px;font-size:13px;font-weight:700;margin:16px 0}input{width:100%;padding:13px 14px;border:1px solid #d8deea;border-radius:10px;font:inherit;color:#17213a;outline:none}input:focus{border-color:#7652f5;box-shadow:0 0 0 3px #7652f520}button{width:100%;border:0;border-radius:10px;padding:14px;background:linear-gradient(105deg,#693ff0,#9b52f7);color:#fff;font:700 14px 'DM Sans',sans-serif;cursor:pointer;margin-top:10px}button:disabled{opacity:.6;cursor:wait}.error{min-height:20px;margin:14px 0 0;color:#c33154;font-size:13px}.foot{font-size:12px;text-align:center;margin:25px 0 0;color:#7b869d}
+  </style>
+</head>
+<body>
+  <main class="login">
+    <div class="brand"><span><b>ScholarVault</b><small>Enterprise CRM</small></span></div>
+    <h1>Welcome back</h1><p>Sign in to manage conversations, contacts, campaigns, and email delivery.</p>
+    <form id="loginForm"><label>Username<input id="username" autocomplete="username" required autofocus></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button id="submit" type="submit">Sign in securely</button><div id="error" class="error" role="alert"></div></form>
+    <p class="foot">ScholarVault CRM · Protected workspace</p>
+  </main>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit',async event=>{event.preventDefault();const button=document.getElementById('submit'),error=document.getElementById('error');error.textContent='';button.disabled=true;button.textContent='Signing in…';try{const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('username').value,password:document.getElementById('password').value})});const data=await response.json().catch(()=>({}));if(!response.ok||!data.success)throw new Error(data.message||'Unable to sign in.');location.assign('/crm');}catch(err){error.textContent=err.message;button.disabled=false;button.textContent='Sign in securely';}});
+  </script>
+</body>
+</html>

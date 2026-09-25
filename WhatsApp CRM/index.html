@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScholarVault CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/crm/styles.css">
+  <link rel="stylesheet" href="/crm/overrides.css">
+  <link rel="stylesheet" href="/crm/module-workspaces.css?v=20260812-3">
+  <link rel="stylesheet" href="/crm/premium-workspaces.css?v=20260813-1">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="CRM navigation">
+      <a class="brand" href="#overview" aria-label="ScholarVault CRM home">
+        <img src="/crm/assets/scholarvault-logo.png" alt="ScholarVault logo">
+        <span><strong>ScholarVault</strong><small>Enterprise CRM</small></span>
+      </a>
+      <button class="new-message" data-action="new-message"><i data-lucide="plus"></i> New message</button>
+      <nav class="nav" id="mainNav">
+        <p>Workspace</p>
+        <button class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i> Overview</button>
+        <button class="nav-link" data-view="inbox"><i data-lucide="messages-square"></i> Live Inbox <span id="inboxCount" class="count"></span></button>
+        <button class="nav-link" data-view="contacts"><i data-lucide="contact-round"></i> Contacts</button>
+        <p>Revenue & campaigns</p>
+        <button class="nav-link" data-view="quick-message"><i data-lucide="send"></i> Quick message</button>
+        <button class="nav-link" data-view="campaign"><i data-lucide="rocket"></i> Bulk campaigns</button>
+        <button class="nav-link" data-view="campaign-history"><i data-lucide="history"></i> Campaign history</button>
+        <button class="nav-link" data-view="calendar"><i data-lucide="calendar-days"></i> Campaign calendar</button>
+        <button class="nav-link" data-view="pipeline"><i data-lucide="kanban-square"></i> Lead pipeline</button>
+        <p>Automation</p>
+        <button class="nav-link" data-view="automation"><i data-lucide="bot"></i> Automation & AI</button>
+        <button class="nav-link" data-view="blacklist"><i data-lucide="shield-alert"></i> Blacklist manager</button>
+        <button class="nav-link" data-view="hot-leads"><i data-lucide="flame"></i> Hot leads</button>
+        <button class="nav-link" data-view="templates"><i data-lucide="file-text"></i> Templates & Spintax</button>
+        <p>Growth operations</p>
+        <button class="nav-link" data-view="email-contacts"><i data-lucide="contact-round"></i> Email contacts</button>
+        <button class="nav-link" data-view="unified"><i data-lucide="mail"></i> Email campaigns</button>
+        <button class="nav-link" data-view="ab-tests"><i data-lucide="flask-conical"></i> A/B tests</button>
+        <button class="nav-link" data-view="analytics"><i data-lucide="chart-no-axes-combined"></i> Insights</button>
+        <p>Administration</p>
+        <button class="nav-link" data-view="instances"><i data-lucide="server-cog"></i> WhatsApp instances</button>
+        <button class="nav-link" data-view="settings"><i data-lucide="settings"></i> Settings</button>
+      </nav>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div><p class="eyebrow" id="viewKicker">Workspace</p><h1 id="viewTitle">Command Center</h1></div>
+        <div class="topbar-actions">
+          <label class="ai-switch" title="Pause or resume all automated replies"><span>Master AI</span><input id="masterAi" type="checkbox"><i></i><b id="masterAiLabel">Loading</b></label>
+          <button class="icon-btn" data-action="refresh" title="Refresh"><i data-lucide="refresh-cw"></i></button>
+          <button class="profile-button" data-action="connect"><span id="topConnection" class="status-dot"></span><span id="topConnectionText">Evolution</span></button>
+          <button class="icon-btn" id="themeToggle" title="Switch theme"><i data-lucide="moon"></i></button>
+        </div>
+      </header>
+
+      <main id="viewRoot" class="view-root">
+        <section id="overviewView" class="view active">
+          <div class="hero-card">
+            <div><span class="hero-pill"><i data-lucide="sparkles"></i> ScholarVault operations</span><h2>Every conversation, campaign and lead in one calm workspace.</h2><p>Connect WhatsApp, respond in real time, and keep growth operations moving without jumping between tools.</p><div class="hero-actions"><button class="primary-btn" data-view="inbox"><i data-lucide="messages-square"></i> Open Live Inbox</button><button class="secondary-btn" data-view="campaign"><i data-lucide="rocket"></i> Create campaign</button></div></div>
+            <div class="hero-orbit"><i data-lucide="message-circle-heart"></i><span id="connectionBadge">Checking</span></div>
+          </div>
+          <div class="metric-grid" id="metricGrid"><div class="metric-card shimmer"></div><div class="metric-card shimmer"></div><div class="metric-card shimmer"></div><div class="metric-card shimmer"></div></div>
+          <div class="overview-work-grid"><section class="surface-card overview-attention"><div class="section-head"><div><h3>Needs attention</h3><p>Conversations and leads that need a human decision.</p></div><button class="text-btn" data-view="inbox">Open inbox</button></div><div id="attentionList" class="action-list"></div></section><section class="surface-card overview-today"><div class="section-head"><div><h3>Today’s operations</h3><p>Connection, automation and scheduled work.</p></div><button class="text-btn" data-view="campaign-history">View history</button></div><div id="operationsList" class="operations-list"></div><div class="launch-grid"><button data-action="new-message"><i data-lucide="user-plus"></i>Add number</button><button data-view="quick-message"><i data-lucide="send"></i>Quick message</button><button data-view="campaign"><i data-lucide="megaphone"></i>Bulk campaign</button><button data-view="automation"><i data-lucide="bot"></i>Automation</button></div></section></div>
+          <div class="overview-bottom-grid"><section class="surface-card"><div class="section-head"><div><h3>Campaign delivery</h3><p>Recent campaigns, delivery status and failures.</p></div><button class="text-btn" data-view="campaign-history">All campaigns</button></div><div id="overviewCampaigns" class="overview-table"></div></section><section class="surface-card"><div class="section-head"><div><h3>Lead pipeline</h3><p>Where your WhatsApp audience is progressing.</p></div><button class="text-btn" data-view="pipeline">Open pipeline</button></div><div id="overviewPipeline" class="pipeline-summary"></div></section></div>
+        </section>
+
+        <section id="inboxView" class="view inbox-view">
+          <section class="conversation-pane"><div class="pane-head"><div><h2>Conversations</h2><p id="conversationSubtitle">Loading messages…</p></div><div><button class="icon-btn soft" data-action="sync-history-all" title="Import stored WhatsApp history"><i data-lucide="history"></i></button><button class="icon-btn soft" data-action="reconcile-inbox" title="Review duplicate sync records"><i data-lucide="scan-search"></i></button><button class="icon-btn soft" data-action="new-message" title="Add number and start a conversation"><i data-lucide="square-pen"></i></button></div></div><label class="search"><i data-lucide="search"></i><input id="chatSearch" placeholder="Search conversations"></label><div class="filter-row"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="pending">Pending</button><button class="filter" data-filter="ai">AI active</button></div><div id="chatList" class="chat-list"></div></section>
+          <section class="thread-pane"><div id="emptyThread" class="empty-thread"><div><i data-lucide="messages-square"></i></div><h2>Select a conversation</h2><p>Choose a contact to see the full WhatsApp conversation and CRM context.</p></div><div id="threadWorkspace" hidden><header class="thread-head"><div class="thread-contact"><div id="threadAvatar" class="avatar large">SV</div><div><h2 id="threadName">—</h2><p id="threadPhone">—</p></div></div><div class="thread-actions"><button class="icon-btn soft" data-action="toggle-handoff" title="Human takeover"><i data-lucide="bot-off"></i></button><button class="icon-btn soft danger" data-action="delete-chat" title="Delete chat"><i data-lucide="trash-2"></i></button></div></header><div id="handoffBanner" class="handoff-banner" hidden><i data-lucide="shield-alert"></i><span>AI is paused for this conversation — human takeover mode.</span><button data-action="toggle-handoff">Re-enable AI</button></div><div id="messageList" class="message-list"></div><footer class="composer"><input id="chatFile" type="file" hidden accept="image/*,application/pdf,video/*,audio/*"><button class="icon-btn soft" data-action="attachment" title="Attach file"><i data-lucide="paperclip"></i></button><button class="icon-btn soft" data-action="poll" title="Send poll"><i data-lucide="bar-chart-3"></i></button><textarea id="messageInput" rows="1" placeholder="Write a WhatsApp message"></textarea><button id="voiceButton" class="icon-btn soft" data-action="voice" title="Voice note"><i data-lucide="mic"></i></button><button class="send-btn" data-action="send-message"><i data-lucide="send"></i><span>Send</span></button></footer></div></section>
+          <aside id="contactDrawer" class="contact-pane"><div id="emptyContact" class="drawer-empty">Open a conversation to see contact information.</div><div id="contactProfile" hidden><div class="profile-cover"></div><div class="profile-main"><div id="profileAvatar" class="avatar profile-avatar">SV</div><h2 id="profileName">—</h2><p id="profilePhone">—</p><button class="secondary-btn small" data-action="edit-contact"><i data-lucide="pencil"></i> Edit contact</button></div><div class="drawer-section"><h3>CRM profile</h3><div id="profileFields" class="profile-fields"></div></div><div class="drawer-section"><div class="section-head"><h3>Media & files</h3><button class="text-btn" data-action="show-media">View all</button></div><div id="mediaGallery" class="media-gallery"></div></div></div></aside>
+        </section>
+
+        <section id="contactsView" class="view standard-view"><div class="page-toolbar"><div><h2>Contacts</h2><p>Manage your WhatsApp audience and CRM records.</p></div><div><button class="secondary-btn" data-action="import-contacts"><i data-lucide="upload"></i> Import CSV</button><button class="primary-btn" data-action="add-contact"><i data-lucide="user-plus"></i> Add contact</button></div></div><div class="table-card"><div class="table-tools"><label class="search"><i data-lucide="search"></i><input id="contactSearch" placeholder="Search name or WhatsApp number"></label><button class="secondary-btn small" data-action="duplicates"><i data-lucide="scan-search"></i> Find duplicates</button></div><div class="table-wrap"><table><thead><tr><th>Contact</th><th>Phone</th><th>Lead stage</th><th>Tags</th><th>Last activity</th><th></th></tr></thead><tbody id="contactsTable"></tbody></table></div></div></section>
+
+        <section id="quickMessageView" class="view standard-view"><div class="page-toolbar"><div><h2>Quick message</h2><p>Send a personalized WhatsApp message to verified contacts.</p></div></div><div class="composer-layout"><section class="surface-card form-card"><div class="recipient-heading"><label>Recipients<textarea id="quickRecipient" rows="3" placeholder="Country-code numbers, separated by commas or new lines"></textarea></label><div class="recipient-actions"><button class="secondary-btn small" data-action="quick-validate"><i data-lucide="badge-check"></i> Validate numbers</button><button class="text-btn" data-action="pick-contact">Choose from CRM</button></div></div><div id="quickValidation" class="recipient-validation" aria-live="polite">Paste numbers to check their country-code format, then validate WhatsApp availability.</div><label>Template<select id="quickTemplate"><option value="">Custom message</option></select></label><div id="quickTemplatePreview" class="template-preview">Select a template to preview and insert it.</div><label>Message<textarea id="quickText" rows="8" placeholder="Write your message. Use {{name}} for personalisation."></textarea></label><div class="inline-fields quick-delivery-fields"><label>Attachment order<select id="quickOrder"><option value="caption">Picture/PDF with description, then poll</option><option value="media_first">Picture/PDF, then message, then poll</option><option value="text_first">Message, then picture/PDF, then poll</option></select></label><label>Schedule (optional)<input id="quickSchedule" type="datetime-local"></label><label>Gap between recipients (seconds)<input id="quickDelay" type="number" min="3" max="120" value="5"><small>Recommended: 5–15 seconds.</small></label></div><div id="quickAttachments" class="attachment-chips"></div><input id="quickFile" type="file" hidden accept="image/*,application/pdf"><div class="form-actions"><button class="secondary-btn" data-action="quick-attachment"><i data-lucide="paperclip"></i> Image or PDF</button><button class="secondary-btn" data-action="quick-poll"><i data-lucide="bar-chart-3"></i> Poll</button><button class="primary-btn" data-action="send-quick"><i data-lucide="send"></i> Send or schedule</button></div></section><aside class="surface-card guidance"><i data-lucide="shield-check"></i><h3>Send with confidence</h3><p>Validate recipients before launch. Invalid or non-WhatsApp numbers are shown in red and never queued. Blacklisted contacts are skipped; polls are always delivered last.</p><hr><strong>Good practice</strong><p>Send only to contacts with a recorded opt-in and include a clear way to opt out, such as <b>STOP</b>, in first-time outreach.</p><section id="quickQueue" class="quick-queue"><h3>Scheduled & active sends</h3><p>Loading current Quick Message work…</p></section></aside></div></section>
+
+        <section id="campaignView" class="view standard-view"><div class="page-toolbar"><div><h2>Bulk campaigns</h2><p>Build safe, personalized WhatsApp campaigns from your existing campaign engine.</p></div><button class="secondary-btn" data-view="campaign-history"><i data-lucide="history"></i> View history</button></div><div class="campaign-grid"><section class="surface-card form-card"><label>Campaign name<input id="campaignName" placeholder="e.g. September conference follow-up"></label><div class="form-actions"><button class="secondary-btn" data-action="campaign-crm-contacts"><i data-lucide="users"></i> Use CRM contacts</button><label class="file-label">Contacts CSV / Excel<input id="campaignCsv" type="file" accept=".csv,.txt,.xlsx,.xls"></label></div><div id="campaignPreview" class="csv-preview">Upload a CSV with phone and name columns.</div><label>Template<select id="campaignTemplate"><option value="">Custom message</option></select></label><div id="campaignTemplatePreview" class="template-preview">Select a template to preview and insert it.</div><label>Message<textarea id="campaignText" rows="7" placeholder="Use {{name}}, Spintax, and your existing message templates."></textarea></label><input id="campaignFile" type="file" hidden accept="image/*,application/pdf"><div class="inline-fields"><label>Delay between messages (seconds)<input id="campaignDelay" type="number" min="3" value="8"></label><label>Delivery order<select id="campaignOrder"><option value="text-first">Text, then attachment, then poll</option><option value="attachment-first">Attachment/caption, then text, then poll</option></select></label><label>Schedule<input id="campaignSchedule" type="datetime-local"></label></div><section class="drip-builder"><div class="section-head"><div><h3>Smart Drip sequence</h3><p>Follow up only when no reply arrives.</p></div><button class="secondary-btn small" data-action="add-drip-step">Add follow-up</button></div><div id="dripSteps"></div></section><div id="campaignAttachments" class="attachment-chips"></div><div class="form-actions"><button class="secondary-btn" data-action="verify-campaign"><i data-lucide="badge-check"></i> Verify numbers</button><button class="secondary-btn" data-action="campaign-attachment"><i data-lucide="paperclip"></i> Image or PDF</button><button class="secondary-btn" data-action="campaign-poll"><i data-lucide="bar-chart-3"></i> Poll</button><button class="primary-btn" data-action="launch-campaign"><i data-lucide="rocket"></i> Launch campaign</button></div></section><aside class="surface-card campaign-side"><h3>Campaign safeguards</h3><ul><li>WhatsApp number validation</li><li>Blacklist protection</li><li>Failed reasons and non-responder export</li><li>Templates and Spintax</li><li>Sequential scheduled sending and Smart Drip</li></ul><button class="text-btn" data-view="templates">Open templates & Spintax</button><section id="campaignQueue" class="quick-queue"><h3>Campaign queue</h3><p>Loading scheduled work…</p></section></aside></div></section>
+
+        <section id="legacyView" class="view legacy-view"><div class="page-toolbar"><div><p class="eyebrow">Feature workspace</p><h2 id="legacyTitle">Module</h2><p id="legacyDescription">Production logic presented in the new ScholarVault CRM.</p></div></div><div id="moduleContent" class="native-module"></div></section>
+      </main>
+    </section>
+  </div>
+
+  <dialog id="crmDialog"><form method="dialog" id="dialogForm"><button class="dialog-close" value="cancel"><i data-lucide="x"></i></button><div id="dialogContent"></div></form></dialog>
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+  <script src="/vendor/xlsx/xlsx.full.min.js"></script>
+  <script src="/crm/app.js?v=20260812-3"></script>
+  <script src="/crm/native-modules.js?v=20260812-3"></script>
+  <script src="/crm/bulk-audience.js"></script>
+  <script src="/crm/inbox-workspace.js?v=20260813-1"></script>
+  <script src="/crm/crm-parity.js?v=20260812-3"></script>
+  <script src="/crm/native-modules-v2.js?v=20260812-3"></script>
+  <script src="/crm/premium-workspaces.js?v=20260813-1"></script>
+</body>
+</html>

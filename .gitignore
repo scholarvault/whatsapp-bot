@@ -4,10 +4,15 @@ node_modules/
 google-credentials.json
 __pycache__/
 *.bat
+!START_SCHOLARVAULT.bat
+!STOP_SCHOLARVAULT.bat
 *.ps1
 *.csv
 *.xlsx
 *.txt
+*.log
+_cleanup_archive_*/
+database/settings_brevo.json
 docs.json
 Data training/
 test_*.js
@@ -18,3 +23,5 @@ add_features_2.js
 add_summarizer.js
 apply_ui_facelift.js
 transform.js
+
+

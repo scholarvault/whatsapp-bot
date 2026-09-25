@@ -3,17 +3,115 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { google } = require('googleapis');
+const http = require('http');
+const { Server } = require('socket.io');
 const setupSendPulse = require('./sendpulse_engine');
+const setupEmailEngine = require('./email_engine');
 
 const app = express();
-const PORT = 3000;
+let globalAiPaused = false;
 
+// CRM access is intentionally enforced on the server (not merely hidden in
+// the browser). Set CRM_ADMIN_USER and CRM_PASSWORD_HASH in the environment
+// to replace the local administrator credentials without changing code.
+const CRM_ADMIN_USER = process.env.CRM_ADMIN_USER || 'Shyam';
+const CRM_PASSWORD_HASH = process.env.CRM_PASSWORD_HASH || '4aa9f354454571beb493ea827e70d44ba797cffddff8cf9d7056c22998cceb0940dc4b8c2e317ce9e42271b35767f3cd3fb6905f2e4a3107d578c22580ff7236';
+const CRM_SESSION_SECRET = process.env.CRM_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const crmLoginAttempts = new Map();
+
+function parseCookies(req) {
+    return Object.fromEntries(String(req.headers.cookie || '').split(';').map(part => part.trim()).filter(Boolean).map(part => {
+        const index = part.indexOf('=');
+        return index < 0 ? [part, ''] : [part.slice(0, index), decodeURIComponent(part.slice(index + 1))];
+    }));
+}
+function signCrmSession(value) { return crypto.createHmac('sha256', CRM_SESSION_SECRET).update(value).digest('base64url'); }
+function crmSessionFor(req) {
+    const token = parseCookies(req).sv_crm_session;
+    if (!token) return null;
+    const [encoded, signature] = token.split('.');
+    if (!encoded || !signature || !crypto.timingSafeEqual(Buffer.from(signCrmSession(encoded)), Buffer.from(signature))) return null;
+    try { const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')); return payload?.u === CRM_ADMIN_USER && payload.exp > Date.now() ? payload : null; } catch { return null; }
+}
+function crmAuthRequired(req, res, next) {
+    if (crmSessionFor(req)) return next();
+    if (req.path.startsWith('/api/')) return res.status(401).json({ success: false, message: 'Please sign in to use ScholarVault CRM.' });
+    return res.redirect('/crm/login');
+}
+function setCrmSession(res, req) {
+    const encoded = Buffer.from(JSON.stringify({ u: CRM_ADMIN_USER, exp: Date.now() + 12 * 60 * 60 * 1000 })).toString('base64url');
+    const secure = String(req.headers['x-forwarded-proto'] || '').split(',')[0] === 'https';
+    res.cookie('sv_crm_session', `${encoded}.${signCrmSession(encoded)}`, { httpOnly: true, sameSite: 'lax', secure, maxAge: 12 * 60 * 60 * 1000, path: '/' });
+}
+
+// Register request parsers before any routes.  The Master AI routes are near
+// the top of this file, so putting these after the routes leaves req.body
+// undefined for JSON requests.
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(express.static(__dirname));
+// Keep legacy assets reachable, but do not let the old index.html take over `/`.
+// The enterprise CRM is now the primary interface; `/legacy` remains a safe rollback.
+app.use(express.static(__dirname, { index: false }));
+// The CRM uses this local copy for Excel contact imports and template downloads.
+// It is deliberately served from this machine, not from a third-party CDN.
+app.use('/vendor/xlsx', express.static(path.join(__dirname, 'node_modules', 'xlsx', 'dist')));
+// The enterprise CRM is a separate frontend over the existing campaign
+// engine. Keeping it on the same server preserves every current API, socket,
+// database, scheduler and integration without a migration.
+app.get('/crm/login', (req, res) => {
+    if (crmSessionFor(req)) return res.redirect('/crm');
+    res.sendFile(path.join(__dirname, 'WhatsApp CRM', 'login.html'));
+});
+app.post('/api/auth/login', (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now(); const attempts = (crmLoginAttempts.get(ip) || []).filter(time => now - time < 10 * 60 * 1000);
+    if (attempts.length >= 5) return res.status(429).json({ success: false, message: 'Too many attempts. Please wait 10 minutes.' });
+    const user = String(req.body?.username || '').trim();
+    const candidate = crypto.scryptSync(String(req.body?.password || ''), 'scholarvault-crm-v1', 64).toString('hex');
+    const valid = user === CRM_ADMIN_USER && crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(CRM_PASSWORD_HASH));
+    if (!valid) { attempts.push(now); crmLoginAttempts.set(ip, attempts); return res.status(401).json({ success: false, message: 'Incorrect username or password.' }); }
+    crmLoginAttempts.delete(ip); setCrmSession(res, req); res.json({ success: true });
+});
+app.post('/api/auth/logout', (req, res) => { res.clearCookie('sv_crm_session', { path: '/' }); res.json({ success: true }); });
+app.get('/api/auth/status', (req, res) => res.json({ success: true, signedIn: Boolean(crmSessionFor(req)), user: crmSessionFor(req)?.u || '' }));
+app.use('/api', (req, res, next) => req.path.startsWith('/auth/') || req.path === '/email/webhooks/brevo' ? next() : crmAuthRequired(req, res, next));
+const crmStaticOptions = {
+    etag: false,
+    lastModified: false,
+    setHeaders: res => res.setHeader('Cache-Control', 'no-store, max-age=0')
+};
+app.use('/crm/assets', express.static(path.join(__dirname, 'WhatsApp CRM', 'assets'), crmStaticOptions));
+app.use('/crm', crmAuthRequired, express.static(path.join(__dirname, 'WhatsApp CRM'), crmStaticOptions));
+app.get('/legacy', crmAuthRequired, (req, res) => res.sendFile(path.join(__dirname, 'index.legacy.bak.html')));
+app.get('/', (req, res) => res.redirect('/crm'));
+app.get('/crm/assets/scholarvault-logo.png', (req, res) => {
+    res.sendFile('C:/Users/Shyam/Scholar Vault 2/Official Files and documents/files/scholarvault-logo.png');
+});
+
+app.post('/api/settings/master-ai', (req, res) => {
+    globalAiPaused = Boolean(req.body?.paused);
+    const settings = getDb('settings_ai');
+    settings.globalAiPaused = globalAiPaused;
+    saveDb('settings_ai', settings);
+    console.log(`[Master AI] Global AI Processing is now ${globalAiPaused ? 'PAUSED' : 'ACTIVE'}.`);
+    if(typeof io !== 'undefined') io.emit('master_ai_status', { paused: globalAiPaused });
+    res.json({ success: true, paused: globalAiPaused });
+});
+
+app.get('/api/settings/master-ai', (req, res) => res.json({ paused: globalAiPaused }));
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+io.use((socket, next) => {
+    const session = crmSessionFor({ headers: { cookie: socket.handshake.headers.cookie || '' } });
+    if (!session) return next(new Error('Authentication required'));
+    next();
+});
+const PORT = Number(process.env.PORT || 3000);
 
 // --- Database Engine Setup ---
 const DB_DIR = path.join(__dirname, 'database');
@@ -70,13 +168,13 @@ const getDb = (name) => {
     try {
         const file = path.join(DB_DIR, `${name}.json`);
         if (!fs.existsSync(file)) {
-            const isArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies'].includes(name);
+            const isArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name);
             fs.writeFileSync(file, isArray ? '[]' : '{}');
         }
         let data = JSON.parse(fs.readFileSync(file, 'utf8'));
         
         // Defensive type guard to prevent serialization errors (e.g. conversations loaded as array)
-        const expectArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies'].includes(name);
+        const expectArray = ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name);
         if (expectArray && !Array.isArray(data)) {
             data = [];
         } else if (!expectArray && (Array.isArray(data) || typeof data !== 'object' || data === null)) {
@@ -85,13 +183,134 @@ const getDb = (name) => {
         return data;
     } catch (e) {
         console.error(`[DB Error] Failed reading ${name}:`, e.message);
-        return ['blacklist', 'inbox', 'hot_leads', 'ai_replies'].includes(name) ? [] : {};
+        return ['blacklist', 'inbox', 'hot_leads', 'instances', 'ai_replies', 'automation_audit', 'email_templates', 'email_events', 'email_lists', 'email_ab_tests', 'resource_packs'].includes(name) ? [] : {};
     }
 };
 
 const saveDb = (name, data) => {
     fs.writeFileSync(path.join(DB_DIR, `${name}.json`), JSON.stringify(data, null, 2));
 };
+
+// Conversation and contact helpers. Evolution can report a device-local label
+// (for example "Você") or a stale push name, so display identity is resolved
+// once here rather than independently by every screen.
+const SELF_CONTACT_LABELS = new Set(['você', 'voce', 'you', 'me', 'myself', 'unknown', 'scholarvault official']);
+const AUTOMATED_SENDER_TYPES = new Set(['bot', 'auto_rule', 'mistral', 'guardrail', 'drip', 'system']);
+const normalizeJid = value => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw.includes('@') ? raw.toLowerCase() : `${raw.replace(/\D/g, '')}@s.whatsapp.net`;
+};
+function recordLidMapping(lid, phoneJid) {
+    if (!lid || !phoneJid) return;
+    const cleanLid = normalizeJid(lid);
+    const cleanPhone = normalizeJid(phoneJid);
+    if (cleanLid.includes('@lid') && cleanPhone.includes('@s.whatsapp.net')) {
+        let mappings = getDb('lid_mappings');
+        if (!mappings || typeof mappings !== 'object' || Array.isArray(mappings)) mappings = {};
+        if (mappings[cleanLid] !== cleanPhone) {
+            mappings[cleanLid] = cleanPhone;
+            saveDb('lid_mappings', mappings);
+            console.log(`[LID Mapping] Mapped ${cleanLid} -> ${cleanPhone}`);
+        }
+    }
+}
+function resolveCanonicalJid(jid, candidateAlt = null) {
+    const clean = normalizeJid(jid);
+    if (!clean) return '';
+    if (candidateAlt && candidateAlt.includes('@s.whatsapp.net')) {
+        recordLidMapping(clean, candidateAlt);
+        return normalizeJid(candidateAlt);
+    }
+    if (clean.includes('@lid')) {
+        const mappings = getDb('lid_mappings') || {};
+        if (mappings[clean]) {
+            return mappings[clean];
+        }
+    }
+    return clean;
+}
+function getLidsForPhone(phoneJid) {
+    const cleanPhone = normalizeJid(phoneJid);
+    const mappings = getDb('lid_mappings') || {};
+    const lids = [];
+    for (const [lid, phone] of Object.entries(mappings)) {
+        if (normalizeJid(phone) === cleanPhone) {
+            lids.push(lid);
+        }
+    }
+    return lids;
+}
+const isUsableContactName = value => {
+    const name = String(value || '').trim();
+    return Boolean(name) && !SELF_CONTACT_LABELS.has(name.toLowerCase()) && !/^\d+$/.test(name);
+};
+const isoFromWhatsAppTimestamp = value => {
+    if (value == null) return null;
+    const numeric = Number(value);
+    const date = Number.isFinite(numeric) ? new Date(numeric < 1e12 ? numeric * 1000 : numeric) : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+};
+function resolveContactIdentity(jid, contacts = getDb('contacts'), candidates = []) {
+    const key = resolveCanonicalJid(jid);
+    const contact = contacts[key] || contacts[normalizeJid(jid)] || {};
+    // A user-confirmed name is always authoritative. The CRM stores this flag
+    // when a contact is saved from the conflict review panel.
+    if (isUsableContactName(contact.displayNameOverride)) return contact.displayNameOverride.trim();
+    if (contact.nameConfirmed === true && isUsableContactName(contact.name)) return contact.name.trim();
+    for (const candidate of candidates) if (isUsableContactName(candidate)) return String(candidate).trim();
+    if (isUsableContactName(contact.name)) return contact.name.trim();
+    return key.split('@')[0] || 'Unknown contact';
+}
+function canonicalizeInboxRows(rows, contacts = getDb('contacts')) {
+    const byJid = new Map();
+    for (const source of Array.isArray(rows) ? rows : []) {
+        const rawJid = normalizeJid(source.jid);
+        if (!rawJid || rawJid.includes('@g.us') || rawJid === 'status@broadcast') continue;
+        const jid = resolveCanonicalJid(rawJid, source.remoteJidAlt);
+        const row = { ...source, jid };
+        const current = byJid.get(jid);
+        const rowTime = new Date(row.lastMessageAt || row.timestamp || 0).getTime() || 0;
+        const currentTime = current ? (new Date(current.lastMessageAt || current.timestamp || 0).getTime() || 0) : -1;
+        if (!current || rowTime >= currentTime) byJid.set(jid, { ...current, ...row, jid });
+    }
+    return [...byJid.values()]
+        .map(row => ({ ...row, name: resolveContactIdentity(row.jid, contacts, [row.name, row.pushName]), lastMessageAt: row.lastMessageAt || row.timestamp }))
+        .sort((a, b) => (new Date(b.lastMessageAt || b.timestamp || 0).getTime() || 0) - (new Date(a.lastMessageAt || a.timestamp || 0).getTime() || 0));
+}
+function upsertConversationIndex(entry, contacts = getDb('contacts')) {
+    const canonicalJid = resolveCanonicalJid(entry.jid, entry.remoteJidAlt);
+    const inbox = canonicalizeInboxRows(getDb('inbox'), contacts).filter(row => row.jid !== canonicalJid);
+    const resolved = {
+        ...entry,
+        jid: canonicalJid,
+        name: resolveContactIdentity(canonicalJid, contacts, [entry.name, entry.pushName]),
+        timestamp: entry.timestamp || new Date().toISOString(),
+        lastMessageAt: entry.lastMessageAt || entry.timestamp || new Date().toISOString()
+    };
+    const merged = canonicalizeInboxRows([resolved, ...inbox], contacts);
+    saveDb('inbox', merged);
+    return merged;
+}
+function upsertThreadMessage(jid, item) {
+    const key = resolveCanonicalJid(jid, item.remoteJidAlt || item.key?.remoteJidAlt);
+    const threads = getDb('conversations');
+    const items = Array.isArray(threads[key]) ? threads[key] : [];
+    const id = item.id || item.messageId;
+    const existing = id ? items.findIndex(message => (message.id || message.messageId) === id) : -1;
+    if (existing >= 0) items[existing] = { ...items[existing], ...item };
+    else items.push(item);
+    threads[key] = items
+        .sort((a, b) => (new Date(a.timestamp || 0).getTime() || 0) - (new Date(b.timestamp || 0).getTime() || 0))
+        .slice(-200);
+    saveDb('conversations', threads);
+    return threads[key];
+}
+function logAutomationAudit(origin, jid, outcome, details = {}) {
+    const audit = getDb('automation_audit');
+    audit.unshift({ id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, origin, jid: normalizeJid(jid), outcome, timestamp: new Date().toISOString(), ...details });
+    saveDb('automation_audit', audit.slice(0, 500));
+}
 
 function getDefaultInstanceName() {
     const instances = getDb('instances');
@@ -104,18 +323,9 @@ function getDefaultInstanceName() {
 }
 
 
-// --- Listmonk Configuration ---
-let LISTMONK_URL = 'https://listmonk.scholarvault.in';
-let LISTMONK_AUTH = { username: 'Sam', password: 'wW0cIzcWq4p2uo2Ng9GRTfESqcJvUeWz' };
-
-function loadListmonkSettings() {
-    const s = getDb('settings_listmonk');
-    if (s && s.url) {
-        LISTMONK_URL = s.url;
-        LISTMONK_AUTH = { username: s.username, password: s.password };
-    }
-}
-loadListmonkSettings();
+// Listmonk has been retired from operations. Its prior local configuration and
+// test records are intentionally left untouched for recovery, but new CRM
+// workflows use the native Brevo email engine instead.
 
 // Pre-filtering and guardrail check to prevent off-topic, administrative, or hostile queries
 function preFilterIncomingMessage(text) {
@@ -616,6 +826,33 @@ const DEFAULT_AUTO_REPLY_RULES = [
     { trigger: 'fee', reply: `💰 *AIHealth 2025 Registration Fees:*\n\n• 🎓 Students: ₹2,500\n• 👨‍🏫 Faculty: ₹3,500\n• 💼 Industry: ₹4,500\n• 🌍 International: $75 USD\n\n✅ Includes Certificate, Kit & Networking\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
     { trigger: 'date', reply: `📅 *Conference Date: July 18–19, 2025*\n📍 Chennai, Tamil Nadu, India\n🔗 https://aihealth.scholarvault.in\n\n{Save the date|Mark your calendar}! 📌\n\n— ScholarVault Team`, delayMinutes: 1 },
     { trigger: 'when', reply: `📅 *AIHealth 2025: July 18–19, 2025*\n📍 Chennai, Tamil Nadu, India\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
+
+    // ══ HOW TO REGISTER (specific, must be before 'register') ══
+    { trigger: 'how to register', reply: `{Sure|Happy to help}! Here's how to register for *AIHealth 2025* 📝\n\n*Step 1:* Visit → https://aihealth.scholarvault.in\n*Step 2:* Click "Register Now"\n*Step 3:* Fill your details (Name, Institute, Email)\n*Step 4:* Complete payment & download confirmation ✅\n\n{Takes less than 5 minutes|Super quick process}!\n\nNeed help at any step? Just reply!\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ MORE DETAILS (specific) ══
+    { trigger: 'more details', reply: `{Sure thing|Absolutely}! Here's everything about *AIHealth 2025* 📋\n\n💡 *Topics:*\n• AI & ML in Diagnostics\n• Drug Discovery with Deep Learning\n• Digital Health & Telemedicine\n• Ethics & Governance in AI\n• Clinical Decision Support Systems\n\n🏅 *Organised by ScholarVault* | ✅ Startup India Recognized\n📅 July 18–19, 2025 | Chennai, India\n🔗 https://aihealth.scholarvault.in\n\nAny specific questions? {I'm here|Just ask}!\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ WHO ARE YOU (specific) ══
+    { trigger: 'who are you', reply: `{Hello|Hi}! 👋 We are *ScholarVault* — India's leading academic conference platform.\n\n🏅 Startup India Recognized (DPIIT Certified)\n🌍 10,000+ researchers across 30+ countries\n🔒 92/100 Trust & Safety Score\n\nWe invited you to *AIHealth 2025* (July 18–19, Chennai).\n🔗 https://www.scholarvault.in\n\n{Any questions?|Happy to help!}\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'who is this', reply: `{Hi|Hello}! 👋 This is *ScholarVault* — India's leading academic conference organiser.\n\n🏅 Startup India Recognized | 92/100 Trust Score\n🎓 Organising *AIHealth 2025* — July 18–19, Chennai\n🔗 https://www.scholarvault.in\n\n{Any questions?|What would you like to know?}\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ HOW DID YOU GET MY NUMBER ══
+    { trigger: 'how did you get my number', reply: `{Completely understand|That's a valid question}! 🙏\n\nYour number is part of our academic research network — compiled from conference registrations and academic institution partnerships.\n\nWe comply with WhatsApp's messaging guidelines. Reply *STOP* anytime to be removed immediately.\n\n{Sorry if this was unexpected|We apologize for any inconvenience}.\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'how do you know', reply: `{Totally fair to ask|Completely understand}! 🙏\n\nYour contact is part of our verified academic research network. Reply *STOP* to be removed immediately from all future messages.\n\n{We respect your privacy|We apologize for any inconvenience}.\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ WHAT IS SCHOLARVAULT ══
+    { trigger: 'what is scholarvault', reply: `{Great question|Happy to explain}! 🌟\n\n*ScholarVault* — India's most trusted academic conference platform.\n\n🎯 *What we do:*\n• International research conferences\n• Scopus-indexed paper publication\n• AI-powered paper matching & peer review\n• Connecting researchers globally\n\n🏅 Startup India Recognized (DPIIT)\n🌍 10,000+ researchers | 30+ countries | 🔒 92/100 Trust Score\n\n🔗 https://www.scholarvault.in\n\n{Want to know about our conferences?|Shall I share upcoming events?}\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ GENERAL INTEREST & POSITIVE ══
+    { trigger: 'interested', reply: `{Fantastic|Brilliant}! 🌟 Since you're interested:\n\n📌 *AIHealth 2025* — AI in Healthcare Conference\n📅 July 18–19, 2025 | Chennai, India\n\n✅ *You get:*\n• Scopus-indexed paper publication\n• Certificate of Participation\n• Networking with 200+ researchers from 15+ countries\n\n🔗 Register: https://aihealth.scholarvault.in\n\n{Shall I share registration steps?|Would you like the brochure?} Just say the word!\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'yes', reply: `{Great to hear|Wonderful|Excellent}! 🎉\n\n*AIHealth 2025* Full Details:\n📅 July 18–19, 2025\n📍 Chennai, Tamil Nadu, India\n🔗 Register: https://aihealth.scholarvault.in\n\n{We'd love to see you there|Looking forward to having you}! Any questions? {Just ask|We're here}.\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'register', reply: `{Sure|Great choice}! 🎉 Register here:\n🔗 https://aihealth.scholarvault.in\n\n📅 *AIHealth 2025* | July 18–19, 2025 | Chennai\n\n{Takes just 5 minutes|Quick and easy}! Reply if you face any issue.\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'send brochure', reply: `{Sure|Absolutely}! 📄 Full conference kit:\n🔗 https://aihealth.scholarvault.in\n\n{The brochure PDF is available on the website|Download the brochure from the site}.\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'okay', reply: `{Perfect|Wonderful}! 😊 Whenever you're ready:\n🔗 https://aihealth.scholarvault.in\n\n{We're here if you have questions|Just ask anytime}!\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'ok', reply: `{Great|Perfect}! 😊 Visit: https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'thank', reply: `{You're most welcome|It's our pleasure|Anytime}! 😊\n\n{Feel free to reach out anytime|We're always here}.\n🌐 www.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'sure', reply: `{Wonderful|Great}! 😊 Here's the link to get started:\n🔗 https://aihealth.scholarvault.in\n\n{Reach out if you need help|We're here anytime}!\n\n— ScholarVault Team`, delayMinutes: 1 },
+    // ══ CONFERENCE DETAILS ══
+    { trigger: 'price', reply: `{Great question|Happy to help}! 💰 *AIHealth 2025 Fees:*\n\n• 🎓 Students: ₹2,500\n• 👨‍🏫 Faculty: ₹3,500\n• 💼 Industry: ₹4,500\n• 🌍 International: $75 USD\n\n✅ Includes Certificate, Kit, Lunch & Networking!\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'fee', reply: `💰 *AIHealth 2025 Registration Fees:*\n\n• 🎓 Students: ₹2,500\n• 👨‍🏫 Faculty: ₹3,500\n• 💼 Industry: ₹4,500\n• 🌍 International: $75 USD\n\n✅ Includes Certificate, Kit & Networking\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'date', reply: `📅 *Conference Date: July 18–19, 2025*\n📍 Chennai, Tamil Nadu, India\n🔗 https://aihealth.scholarvault.in\n\n{Save the date|Mark your calendar}! 📌\n\n— ScholarVault Team`, delayMinutes: 1 },
+    { trigger: 'when', reply: `📅 *AIHealth 2025: July 18–19, 2025*\n📍 Chennai, Tamil Nadu, India\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
     { trigger: 'venue', reply: `📍 *AIHealth 2025 Venue:* Chennai, Tamil Nadu, India\n(Exact address shared upon registration)\n\n✈️ Well-connected by Air, Rail & Road.\n🏨 Partner hotels at special rates.\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
     { trigger: 'certificate', reply: `🏆 *AIHealth 2025 Certificates:*\n\n📜 Certificate of Participation — all attendees\n📜 Certificate of Presentation — paper presenters\n📜 Best Paper Award — top-ranked papers\n\n✅ Digitally signed & verifiable online.\n🔗 https://aihealth.scholarvault.in\n\n— ScholarVault Team`, delayMinutes: 1 },
     { trigger: 'scopus', reply: `📚 *Publication Details:*\n\n✅ Scopus-Indexed publication for selected papers\n✅ Double-blind peer review\n✅ Extended versions eligible for SCI journals\n\n📝 https://aihealth.scholarvault.in\n\n{Submit early for priority review}!\n\n— ScholarVault Team`, delayMinutes: 1 },
@@ -666,6 +903,27 @@ function parseSpintax(text) {
     return parsed;
 }
 
+// AI may answer only genuinely new inbound activity. Old webhook replays and
+// messages sent from the linked WhatsApp mobile app must never restart a bot
+// conversation behind an operator's back.
+const AI_INBOUND_FRESHNESS_MS = 2 * 60 * 1000;
+const MANUAL_HANDOFF_WINDOW_MS = 30 * 60 * 1000;
+const RECEIPT_RANK = { ERROR: 0, PENDING: 1, SENT: 2, DELIVERED: 3, READ: 4, PLAYED: 5 };
+function normalizeEvolutionReceipt(value) {
+    const numeric = { 0: 'ERROR', 1: 'PENDING', 2: 'SENT', 3: 'DELIVERED', 4: 'READ', 5: 'PLAYED' };
+    if (Object.prototype.hasOwnProperty.call(numeric, value)) return numeric[value];
+    const label = String(value || '').toUpperCase();
+    return ({ SERVER_ACK: 'SENT', DELIVERY_ACK: 'DELIVERED', READ: 'READ', PLAYED: 'PLAYED', PENDING: 'PENDING', ERROR: 'ERROR' }[label] || 'PENDING');
+}
+function strongestEvolutionReceipt(updates) {
+    const values = Array.isArray(updates) ? updates : [updates];
+    return values.map(item => normalizeEvolutionReceipt(item?.status ?? item)).reduce((best, value) => (RECEIPT_RANK[value] > RECEIPT_RANK[best] ? value : best), 'PENDING');
+}
+
+// Restore the last selected Master AI state after a server restart.
+const persistedAiSettings = getDb('settings_ai');
+globalAiPaused = persistedAiSettings.globalAiPaused === true;
+
 function getSentiment(text) {
     const lower = text.toLowerCase();
     const positive = ['interested', 'price', 'fee', 'how to join', 'registration', 'yes', 'sure', 'ok', 'good', 'great', 'nice'];
@@ -678,14 +936,22 @@ function getSentiment(text) {
     return 'Neutral';
 }
 
-async function sendSmartMessage(remoteJid, instanceName, textReply, apiKey, buttonsArr, skipDelay = false, senderType = 'bot') {
+async function sendSmartMessageCore(remoteJid, instanceName, textReply, apiKey, buttonsArr, skipDelay = false, senderType = 'bot', pollQuestion = '') {
+    // This is the final safety gate for every automated message. It protects
+    // delayed callbacks that were scheduled before the Master AI switch was
+    // paused. Manual agent replies and explicit campaigns use other types.
+    if (globalAiPaused && AUTOMATED_SENDER_TYPES.has(senderType)) {
+        console.log(`[Master AI Pause] Blocked automated send to ${remoteJid}`);
+        logAutomationAudit(senderType, remoteJid, 'blocked', { reason: 'Master AI is paused' });
+        return { success: false, reason: 'Master AI is paused' };
+    }
     const blacklist = getDb('blacklist');
     // Normalize JID if needed
-    const normalizedJid = remoteJid.includes('@s.whatsapp.net') ? remoteJid : `${remoteJid}@s.whatsapp.net`;
+    const normalizedJid = remoteJid.includes('@') ? remoteJid : `${remoteJid}@s.whatsapp.net`;
     
     if (blacklist.includes(normalizedJid)) {
         console.log(`[Safety Guard] Blocked sending to Blacklisted number: ${normalizedJid}`);
-        return false;
+        return { success: false, reason: 'Blacklisted number' };
     }
     
     const finalMessage = parseSpintax(textReply);
@@ -709,35 +975,49 @@ async function sendSmartMessage(remoteJid, instanceName, textReply, apiKey, butt
             await new Promise(r => setTimeout(r, 4000));
         }
 
+        // The pause may have changed while typing was simulated. Check again
+        // immediately before any automated message reaches Evolution.
+        if (globalAiPaused && AUTOMATED_SENDER_TYPES.has(senderType)) {
+            logAutomationAudit(senderType, normalizedJid, 'blocked', { reason: 'Master AI paused during delay' });
+            return { success: false, reason: 'Master AI is paused' };
+        }
+
+        let sendRes;
         if (buttonsArr && buttonsArr.length > 0) {
-            console.log(`[Sender] Dispatching BUTTON message to ${normalizedJid}...`);
-            await axios.post(`${EVO_API_URL}/message/sendButtons/${instanceName}`, {
+            // If pollQuestion is provided AND we have a message, send the text body first, then the poll!
+            if (pollQuestion && finalMessage) {
+                console.log(`[Sender] Dispatching TEXT body before POLL to ${normalizedJid}...`);
+                await axios.post(`${EVO_API_URL}/message/sendText/${instanceName}`, {
+                    number: normalizedJid,
+                    text: finalMessage
+                }, { headers: { 'apikey': key } });
+                
+                await new Promise(r => setTimeout(r, 1000)); // Small delay between messages
+            }
+
+            console.log(`[Sender] Dispatching POLL message to ${normalizedJid}...`);
+            sendRes = await axios.post(`${EVO_API_URL}/message/sendPoll/${instanceName}`, {
                 number: normalizedJid,
-                text: finalMessage,
-                footer: "ScholarVault",
-                buttons: buttonsArr.map((b, i) => {
+                name: pollQuestion || finalMessage,
+                selectableCount: 1,
+                values: buttonsArr.map(b => {
                     const str = String(b).trim();
                     if (str.includes('|')) {
-                        const [title, action] = str.split('|', 2);
-                        const cleanTitle = title.trim().substring(0, 20);
-                        const cleanAction = action.trim();
-                        if (cleanAction.startsWith('http')) {
-                            return { type: "url", title: cleanTitle, url: cleanAction };
-                        } else if (cleanAction.startsWith('+') || !isNaN(cleanAction.replace(/\D/g,''))) {
-                            return { type: "call", title: cleanTitle, phoneNumber: cleanAction };
-                        }
+                        return str.split('|', 2)[0].trim().substring(0, 30);
                     }
-                    return { type: "reply", reply: { id: `sv_btn_${i}`, title: str.substring(0, 20) } };
+                    return str.substring(0, 30);
                 })
             }, { headers: { 'apikey': key } });
         } else {
             console.log(`[Sender] Dispatching TEXT message to ${normalizedJid}...`);
-            await axios.post(`${EVO_API_URL}/message/sendText/${instanceName}`, {
+            sendRes = await axios.post(`${EVO_API_URL}/message/sendText/${instanceName}`, {
                 number: normalizedJid,
                 text: finalMessage
             }, { headers: { 'apikey': key } });
         }
         
+        const messageId = sendRes?.data?.key?.id || sendRes?.data?.message?.key?.id || null;
+
         // Track reply for SLA
         let contacts = getDb('contacts');
         if (contacts[normalizedJid]) {
@@ -748,35 +1028,49 @@ async function sendSmartMessage(remoteJid, instanceName, textReply, apiKey, butt
 
         // Track the outbound message in conversations database (ignore system admin alerts)
         if (normalizedJid && !finalMessage.includes("🚨 URGENT:")) {
-            let threads = getDb('conversations');
-            if (!threads[normalizedJid]) threads[normalizedJid] = [];
-            threads[normalizedJid].push({
+            const sentAt = new Date().toISOString();
+            upsertThreadMessage(normalizedJid, {
+                id: messageId,
+                fromMe: true,
                 direction: 'out',
-                text: finalMessage,
+                text: finalMessage || (pollQuestion ? `Poll: ${pollQuestion}` : ''),
+                messageType: buttonsArr && buttonsArr.length > 0 ? 'poll' : 'text',
+                pollQuestion: pollQuestion || null,
+                pollOptions: buttonsArr && buttonsArr.length > 0 ? buttonsArr : null,
                 senderType: senderType,
-                timestamp: new Date().toISOString()
+                status: 'PENDING',
+                timestamp: sentAt
             });
-            if (threads[normalizedJid].length > 200) {
-                threads[normalizedJid] = threads[normalizedJid].slice(-200);
-            }
-            saveDb('conversations', threads);
+            upsertConversationIndex({ jid: normalizedJid, message: finalMessage || `Poll: ${pollQuestion}`, timestamp: sentAt, sentiment: 'Neutral' });
         }
-        
-        return true;
+        if (AUTOMATED_SENDER_TYPES.has(senderType)) logAutomationAudit(senderType, normalizedJid, 'sent', { messageId });
+        return { success: true, messageId };
     } catch (error) {
+        let reason = error?.response?.data?.message?.[0]?.error || error?.response?.data?.error || error?.response?.data?.message || error.message || 'Unknown error';
+        if (Array.isArray(reason)) reason = JSON.stringify(reason);
         console.error(`[Sender] Failed to send:`, error?.response?.data || error.message);
-        return false;
+        return { success: false, reason: typeof reason === 'string' ? reason : JSON.stringify(reason) };
     }
 }
 
+async function sendSmartMessage(remoteJid, instanceName, textReply, apiKey, buttonsArr, skipDelay = false, senderType = 'bot') {
+    const result = await sendSmartMessageCore(remoteJid, instanceName, textReply, apiKey, buttonsArr, skipDelay, senderType);
+    return result.success;
+}
+
 // Send an image media message with a caption via Evolution API
-async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fileName, apiKey, skipDelay = false, senderType = 'bot') {
+async function sendMediaMessageCore(remoteJid, instanceName, base64Data, caption, fileName, apiKey, skipDelay = false, senderType = 'bot') {
+    if (globalAiPaused && AUTOMATED_SENDER_TYPES.has(senderType)) {
+        console.log(`[Master AI Pause] Blocked automated media send to ${remoteJid}`);
+        logAutomationAudit(senderType, normalizeJid(remoteJid), 'blocked', { reason: 'master_ai_paused', kind: 'media' });
+        return { success: false, reason: 'Master AI is paused' };
+    }
     const blacklist = getDb('blacklist');
-    const normalizedJid = remoteJid.includes('@s.whatsapp.net') ? remoteJid : `${remoteJid}@s.whatsapp.net`;
+    const normalizedJid = remoteJid.includes('@') ? remoteJid : `${remoteJid}@s.whatsapp.net`;
     
     if (blacklist.includes(normalizedJid)) {
         console.log(`[Safety Guard] Blocked media send to Blacklisted number: ${normalizedJid}`);
-        return false;
+        return { success: false, reason: 'Blacklisted number' };
     }
 
     const finalCaption = parseSpintax(caption || '');
@@ -796,18 +1090,35 @@ async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fi
                 console.error(`[Sender] Failed presence post:`, err.message);
             }
             await new Promise(r => setTimeout(r, 4000));
+            if (globalAiPaused && AUTOMATED_SENDER_TYPES.has(senderType)) {
+                logAutomationAudit(senderType, normalizedJid, 'blocked', { reason: 'master_ai_paused_after_delay', kind: 'media' });
+                return { success: false, reason: 'Master AI was paused before media was sent' };
+            }
+        }
+
+        // Browser composers retain files as data URLs. Evolution accepts the
+        // raw base64 payload (or an https URL), never the data:image/... prefix.
+        const normalizedMedia = String(base64Data || '').startsWith('data:')
+            ? String(base64Data).split(';base64,').pop()
+            : base64Data;
+        if (!normalizedMedia || typeof normalizedMedia !== 'string') {
+            return { success: false, reason: 'Attachment has no usable media payload' };
         }
 
         console.log(`[Sender] Dispatching MEDIA message to ${normalizedJid} (${fileName})...`);
+        const isPdf = (fileName || '').toLowerCase().endsWith('.pdf');
+        const mediatype = isPdf ? 'document' : 'image';
+
         const evoResponse = await axios.post(`${EVO_API_URL}/message/sendMedia/${instanceName}`, {
             number: normalizedJid,
-            media: base64Data,
-            mediatype: 'image',
+            media: normalizedMedia,
+            mediatype: mediatype,
             fileName: fileName || 'campaign_poster.png',
             caption: finalCaption
         }, { headers: { 'apikey': key } });
 
         const apiSuccess = !!evoResponse.data;
+        const messageId = evoResponse?.data?.key?.id || evoResponse?.data?.message?.key?.id || null;
 
         if (apiSuccess) {
             // Save file locally for conversation thread display
@@ -816,25 +1127,24 @@ async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fi
             const cleanFileName = (fileName || 'campaign_poster.png').replace(/[^a-zA-Z0-9.\-_]/g, '_');
             const savedFileName = `${Date.now()}-${cleanFileName}`;
             const localFilePath = path.join(uploadsDir, savedFileName);
-            fs.writeFileSync(localFilePath, Buffer.from(base64Data, 'base64'));
+            const rawMedia = normalizedMedia;
+            fs.writeFileSync(localFilePath, Buffer.from(rawMedia, 'base64'));
             const relativeUrl = `/uploads/${savedFileName}`;
 
             // Track outbound media in conversations
-            let threads = getDb('conversations');
-            if (!threads[normalizedJid]) threads[normalizedJid] = [];
-            threads[normalizedJid].push({
+            upsertThreadMessage(normalizedJid, {
+                id: messageId,
+                fromMe: true,
                 direction: 'out',
                 text: finalCaption || `Sent image: ${fileName || cleanFileName}`,
                 mediaUrl: relativeUrl,
-                mediaType: 'image',
+                mediaType: mediatype,
                 fileName: fileName || cleanFileName,
                 senderType: senderType,
                 timestamp: new Date().toISOString()
             });
-            if (threads[normalizedJid].length > 200) {
-                threads[normalizedJid] = threads[normalizedJid].slice(-200);
-            }
-            saveDb('conversations', threads);
+            upsertConversationIndex({ jid: normalizedJid, message: finalCaption || `Sent image: ${fileName || cleanFileName}`, timestamp: new Date().toISOString(), direction: 'out' });
+            if (AUTOMATED_SENDER_TYPES.has(senderType)) logAutomationAudit(senderType, normalizedJid, 'sent', { kind: 'media', messageId });
 
             // Track reply for SLA
             let contacts = getDb('contacts');
@@ -845,20 +1155,59 @@ async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fi
             }
         }
 
-        return apiSuccess;
+        return { success: apiSuccess, reason: apiSuccess ? null : 'Evolution API rejected media send' };
     } catch (error) {
+        let reason = error?.response?.data?.message?.[0]?.error || error?.response?.data?.error || error?.response?.data?.message || error.message || 'Unknown error';
+        if (Array.isArray(reason)) reason = JSON.stringify(reason);
         console.error(`[Sender] Failed to send media:`, error?.response?.data || error.message);
-        return false;
+        return { success: false, reason: typeof reason === 'string' ? reason : JSON.stringify(reason) };
     }
+}
+
+async function sendMediaMessage(remoteJid, instanceName, base64Data, caption, fileName, apiKey, skipDelay = false, senderType = 'bot') {
+    const result = await sendMediaMessageCore(remoteJid, instanceName, base64Data, caption, fileName, apiKey, skipDelay, senderType);
+    return result.success;
 }
 
 // --- API Endpoints: Core Features ---
 
+// Verify if numbers exist on WhatsApp
+app.post('/api/contacts/verify-numbers', async (req, res) => {
+    try {
+        const { numbers, instance } = req.body;
+        if (!numbers || !Array.isArray(numbers)) return res.status(400).json({ error: 'Valid numbers array is required' });
+
+        const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+        const EVO_API_KEY = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        const instanceName = instance || getDefaultInstanceName();
+        if (!instanceName) return res.status(400).json({ error: 'No active WhatsApp instance available' });
+
+        const response = await axios.post(`${EVO_API_URL}/chat/whatsappNumbers/${instanceName}`, {
+            numbers: numbers
+        }, { headers: { 'apikey': EVO_API_KEY } });
+
+        res.json({ success: true, results: response.data });
+    } catch (error) {
+        console.error('[Verify] Error verifying numbers:', error?.response?.data || error.message);
+        res.status(500).json({ success: false, error: 'Failed to verify numbers with Evolution API' });
+    }
+});
+
 app.post('/api/start-evolution', async (req, res) => {
     try {
-        const evoUrl = process.env.EVO_API_URL || 'http://localhost:8080';
-        const evoKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
-        const instanceName = 'ScholarVault';
+        const body = req.body || {};
+        let instances = getDb('instances');
+        if (!Array.isArray(instances)) instances = [];
+        const saved = instances.find(item => item.name === body.name) || instances.find(item => item.isDefault) || instances[0];
+        const evoUrl = String(body.apiUrl || saved?.apiUrl || process.env.EVO_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+        const evoKey = String(body.apiKey || saved?.apiKey || process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+        const instanceName = String(body.name || saved?.name || 'ScholarVault').trim();
+        if (!instanceName || !evoUrl || !evoKey) return res.status(400).json({ success: false, message: 'Instance name, API URL and API key are required.' });
+
+        const existingIndex = instances.findIndex(item => item.name === instanceName);
+        const storedInstance = { ...(existingIndex >= 0 ? instances[existingIndex] : {}), name: instanceName, apiUrl: evoUrl, apiKey: evoKey, addedAt: existingIndex >= 0 ? instances[existingIndex].addedAt : new Date().toISOString(), isDefault: existingIndex >= 0 ? Boolean(instances[existingIndex].isDefault) : instances.length === 0 };
+        if (existingIndex >= 0) instances[existingIndex] = storedInstance; else instances.push(storedInstance);
+        saveDb('instances', instances);
         
         console.log(`[Cloud Init] Requesting WhatsApp QR Code from ${evoUrl}...`);
         
@@ -881,10 +1230,12 @@ app.post('/api/start-evolution', async (req, res) => {
             });
         }
 
-        if (response.data && response.data.base64) {
-            return res.json({ success: true, message: 'Scan the QR Code on your screen!', qrcode: response.data.base64 });
+        const rawQr = response.data?.base64 || response.data?.qrcode?.base64 || response.data?.qrcode?.code || response.data?.code || '';
+        const qrcode = rawQr && !String(rawQr).startsWith('data:') && !String(rawQr).startsWith('http') ? `data:image/png;base64,${rawQr}` : rawQr;
+        if (qrcode) {
+            return res.json({ success: true, instanceName, message: 'Scan the QR Code on your screen!', qrcode });
         } else {
-            return res.json({ success: true, message: 'Instance already connected or processing.', qrcode: null });
+            return res.json({ success: true, instanceName, message: 'Instance already connected or processing.', qrcode: null, state: response.data?.instance?.state || response.data?.state || 'processing' });
         }
     } catch (e) {
         return res.status(500).json({ success: false, message: e.message });
@@ -911,20 +1262,180 @@ app.get('/api/health', async (req, res) => {
 
 // Inbox APIs
 app.get('/api/inbox', (req, res) => {
-    const inbox = getDb('inbox');
+    const inbox = canonicalizeInboxRows(getDb('inbox'));
     const contacts = getDb('contacts');
     // Enrich messages with SLA status and session context escalated status
     const enrichedMessages = inbox.map(m => {
         const sessionContext = getSessionContext(m.jid);
         return {
             ...m,
+            name: resolveContactIdentity(m.jid, contacts, [m.name, m.pushName]),
             escalated: sessionContext.escalated === true || m.escalated === true,
             slaBreach: contacts[m.jid]?.slaBreach || false,
-            followUpDate: sessionContext.followUpDate || null
+            followUpDate: sessionContext.followUpDate || null,
+            lastReceivedAt: contacts[m.jid]?.lastReceivedAt || null,
+            profilePictureUrl: contacts[m.jid]?.profilePictureUrl || null
         };
     });
     res.json({ success: true, messages: enrichedMessages });
 });
+
+// Inspect duplicate/stale records before any repair. `apply: true` is a
+// deliberate opt-in action; the CRM calls this endpoint in preview mode first.
+app.post('/api/inbox/reconcile', (req, res) => {
+    const apply = req.body?.apply === true;
+    const contacts = getDb('contacts');
+    const current = getDb('inbox');
+    const canonical = canonicalizeInboxRows(current, contacts);
+    const report = {
+        before: current.length,
+        after: canonical.length,
+        removed: current.length - canonical.length,
+        duplicates: current.length - new Set(current.map(row => normalizeJid(row.jid))).size,
+        preview: canonical.map(row => ({ jid: row.jid, name: row.name, timestamp: row.lastMessageAt || row.timestamp, message: row.message }))
+    };
+    if (apply) {
+        saveDb('inbox', canonical);
+        if (typeof io !== 'undefined' && io) io.emit('messages_update');
+    }
+    res.json({ success: true, applied: apply, report });
+});
+
+// Explicit user-triggered refresh from Evolution. This is intentionally not
+// called by page load: it updates local conversation indexes but never sends a
+// WhatsApp message.
+app.post('/api/inbox/sync', async (req, res) => {
+    const result = await syncOfflineMessages();
+    if (result?.success === false) return res.status(502).json(result);
+    const messages = canonicalizeInboxRows(getDb('inbox'));
+    res.json({ success: true, synced: result?.synced || 0, conversations: messages.length, messages });
+});
+
+app.delete('/api/inbox/:jid', async (req, res) => {
+    const { jid } = req.params;
+    if (!jid) return res.status(400).json({ success: false });
+    let whatsappDeletionSupported = true;
+
+    try {
+        const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+        const instName = getDefaultInstanceName();
+        const key = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+
+        await axios.delete(`${EVO_API_URL}/chat/deleteChat/${instName}?number=${encodeURIComponent(jid)}`, { headers: { 'apikey': key } });
+    } catch(e) {
+        // Evolution API v2 does not expose a whole-chat deletion endpoint. A
+        // missing route must not prevent the user from removing their CRM copy.
+        if (e.response?.status === 404) {
+            whatsappDeletionSupported = false;
+            console.warn(`[Inbox] Evolution does not support whole-chat deletion for ${jid}; removing CRM history only.`);
+        } else {
+            return res.status(502).json({ success: false, message: `WhatsApp could not confirm chat deletion: ${e.response?.data?.message || e.message}` });
+        }
+    }
+    
+    // Remove from inbox.json
+    let inbox = getDb('inbox');
+    inbox = inbox.filter(m => m.jid !== jid);
+    saveDb('inbox', inbox);
+    
+    // Remove from conversations.json (Clear chat history)
+    let threads = getDb('conversations');
+    delete threads[jid];
+    saveDb('conversations', threads);
+    
+    // Optionally remove from session_contexts
+    let sessionContexts = getDb('session_contexts');
+    if (sessionContexts[jid]) {
+        delete sessionContexts[jid];
+        saveDb('session_contexts', sessionContexts);
+    }
+
+    res.json({ success: true, whatsappDeletionSupported });
+});
+
+// ===== DELETE SINGLE MESSAGE FOR EVERYONE =====
+app.delete('/api/inbox/:jid/message/:msgId/everyone', async (req, res) => {
+    const { jid, msgId } = req.params;
+    if (!jid || !msgId) return res.status(400).json({ success: false });
+    
+    try {
+        const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+        const instName = getDefaultInstanceName();
+        const key = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        
+        // Evolution API: Delete for Everyone
+        await axios.delete(`${EVO_API_URL}/chat/deleteMessageForEveryone/${instName}`, {
+            headers: { 'apikey': key },
+            // Evolution API v2 expects the original Baileys key fields. Keep
+            // number/messageId too for older installs that use those aliases.
+            data: {
+                remoteJid: jid,
+                id: msgId,
+                fromMe: true,
+                key: { remoteJid: jid, id: msgId, fromMe: true },
+                number: jid.replace(/@s\.whatsapp\.net$/i, ''),
+                messageId: msgId
+            }
+        });
+        
+        // Also remove locally
+        let threads = getDb('conversations');
+        if (threads[jid]) {
+            threads[jid] = threads[jid].filter(m => m.id !== msgId && m.messageId !== msgId);
+            saveDb('conversations', threads);
+            if (typeof io !== 'undefined' && io) io.emit('messages_update');
+        }
+        
+        res.json({ success: true });
+    } catch (e) {
+        const detail = e.response?.data?.message || e.response?.data?.error || e.message || 'Evolution rejected the delete request';
+        console.error('[Delete for everyone]', detail);
+        res.status(e.response?.status || 502).json({ success: false, message: `WhatsApp could not delete this message for everyone: ${detail}` });
+    }
+});
+
+// ===== DELETE SINGLE MESSAGE FOR ME (Local Only) =====
+app.delete('/api/inbox/:jid/message/:msgId/me', async (req, res) => {
+    const { jid, msgId } = req.params;
+    if (!jid || !msgId) return res.status(400).json({ success: false });
+    
+    try {
+        let threads = getDb('conversations');
+        if (threads[jid]) {
+            threads[jid] = threads[jid].filter(m => m.id !== msgId && m.messageId !== msgId);
+            saveDb('conversations', threads);
+            if (typeof io !== 'undefined' && io) io.emit('messages_update');
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ===== EDIT MESSAGE =====
+app.put('/api/inbox/:jid/message/:msgId', async (req, res) => {
+    const { jid, msgId } = req.params;
+    const { text } = req.body;
+    if (!jid || !msgId || !text) return res.status(400).json({ success: false });
+    
+    try {
+        // Just local update for edit in this phase unless Evo supports it natively well
+        let threads = getDb('conversations');
+        if (threads[jid]) {
+            const m = threads[jid].find(m => m.id === msgId || m.messageId === msgId);
+            if (m) {
+                m.text = text;
+                m.status = 'EDITED';
+                saveDb('conversations', threads);
+                if (typeof io !== 'undefined' && io) io.emit('messages_update');
+            }
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false });
+    }
+});
+
 app.post('/api/inbox-reply', async (req, res) => {
     const { jid, message, instance } = req.body;
     if (!jid || !message) return res.status(400).json({ success: false });
@@ -934,6 +1445,168 @@ app.post('/api/inbox-reply', async (req, res) => {
 
 // CRM Contacts APIs
 app.get('/api/contacts', (req, res) => res.json({ success: true, contacts: getDb('contacts') }));
+
+app.get('/api/contacts/:jid/identity', (req, res) => {
+    const jid = normalizeJid(decodeURIComponent(req.params.jid));
+    const contacts = getDb('contacts');
+    const inbox = canonicalizeInboxRows(getDb('inbox'), contacts).find(row => row.jid === jid);
+    const thread = getDb('conversations')[jid] || [];
+    const names = [...new Set([contacts[jid]?.displayNameOverride, contacts[jid]?.name, inbox?.name, ...thread.map(item => item.name)].filter(Boolean))];
+    res.json({ success: true, jid, resolvedName: resolveContactIdentity(jid, contacts, names), sources: names.map(name => ({ name, usable: isUsableContactName(name) })) });
+});
+
+app.post('/api/contacts/:jid/identity', (req, res) => {
+    const jid = normalizeJid(decodeURIComponent(req.params.jid));
+    const name = String(req.body?.name || '').trim();
+    if (!isUsableContactName(name)) return res.status(400).json({ success: false, message: 'Enter a valid contact name' });
+    const contacts = getDb('contacts');
+    contacts[jid] = { ...(contacts[jid] || { jid }), displayNameOverride: name, name, nameConfirmed: true, identityUpdatedAt: new Date().toISOString() };
+    saveDb('contacts', contacts);
+    const inbox = canonicalizeInboxRows(getDb('inbox'), contacts);
+    saveDb('inbox', inbox);
+    if (typeof io !== 'undefined' && io) io.emit('messages_update');
+    res.json({ success: true, contact: contacts[jid], resolvedName: name });
+});
+
+// --- Duplicate Contact Detection ---
+app.get('/api/contacts/duplicates', (req, res) => {
+    try {
+        const contacts = getDb('contacts');
+        const numberGroups = {};
+        
+        // Group by phone number
+        for (const jid in contacts) {
+            if (jid.includes('@g.us') || jid.includes('@lid')) continue;
+            
+            // Extract pure numbers
+            const pureNumber = jid.split('@')[0].replace(/\D/g, '');
+            if (pureNumber.length > 5) {
+                if (!numberGroups[pureNumber]) numberGroups[pureNumber] = [];
+                numberGroups[pureNumber].push(contacts[jid]);
+            }
+        }
+        
+        const duplicates = Object.values(numberGroups).filter(group => group.length > 1);
+        res.json({ success: true, duplicates });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+app.post('/api/contacts/merge', (req, res) => {
+    try {
+        const { primaryJid, duplicateJids } = req.body;
+        if (!primaryJid || !duplicateJids || !Array.isArray(duplicateJids)) {
+            return res.status(400).json({ success: false, message: 'Invalid payload' });
+        }
+        
+        let contacts = getDb('contacts');
+        let convos = getDb('conversations');
+        let inbox = getDb('inbox');
+        
+        const primary = contacts[primaryJid];
+        if (!primary) return res.status(404).json({ success: false, message: 'Primary contact not found' });
+        
+        for (const dupJid of duplicateJids) {
+            if (dupJid === primaryJid) continue;
+            const dupContact = contacts[dupJid];
+            if (!dupContact) continue;
+            
+            // Merge tags
+            if (dupContact.tags) {
+                if (!primary.tags) primary.tags = [];
+                dupContact.tags.forEach(t => {
+                    if (!primary.tags.includes(t)) primary.tags.push(t);
+                });
+            }
+            
+            // Merge CRM fields if primary is empty
+            ['institution', 'role', 'email', 'country'].forEach(field => {
+                if (!primary[field] && dupContact[field]) primary[field] = dupContact[field];
+            });
+            
+            // Merge conversations
+            if (convos[dupJid]) {
+                if (!convos[primaryJid]) convos[primaryJid] = [];
+                convos[primaryJid] = [...convos[primaryJid], ...convos[dupJid]];
+                
+                // Sort by timestamp and remove duplicate message IDs
+                convos[primaryJid].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                const uniqueMsgs = [];
+                const seenIds = new Set();
+                convos[primaryJid].forEach(m => {
+                    const id = m.id || m.messageId;
+                    if (id && !seenIds.has(id)) {
+                        seenIds.add(id);
+                        uniqueMsgs.push(m);
+                    }
+                });
+                convos[primaryJid] = uniqueMsgs;
+                
+                delete convos[dupJid];
+            }
+            
+            // Remove duplicate from inbox
+            inbox = inbox.filter(m => m.jid !== dupJid);
+            
+            // Delete duplicate contact
+            delete contacts[dupJid];
+        }
+        
+        saveDb('contacts', contacts);
+        saveDb('conversations', convos);
+        saveDb('inbox', inbox);
+        
+        res.json({ success: true, message: 'Contacts merged successfully' });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+
+// Bulk Upload Contacts
+app.post('/api/contacts/bulk', (req, res) => {
+    const { contacts: incomingContacts, mode } = req.body;
+    // mode: 'replace', 'merge', 'ignore'
+    let dbContacts = getDb('contacts');
+    
+    let addedCount = 0;
+    let mergedCount = 0;
+    let ignoredCount = 0;
+
+    for (const [jid, incomingData] of Object.entries(incomingContacts)) {
+        if (dbContacts[jid]) {
+            if (mode === 'replace') {
+                dbContacts[jid] = { ...dbContacts[jid], ...incomingData };
+                mergedCount++;
+            } else if (mode === 'merge') {
+                dbContacts[jid].name = incomingData.name || dbContacts[jid].name;
+                
+                const currentTags = Array.isArray(dbContacts[jid].tags) ? dbContacts[jid].tags : [];
+                const incomingTags = Array.isArray(incomingData.tags) ? incomingData.tags : (incomingData.group ? [incomingData.group] : []);
+                
+                dbContacts[jid].tags = [...new Set([...currentTags, ...incomingTags])];
+                mergedCount++;
+            } else {
+                ignoredCount++; // 'ignore' mode
+            }
+        } else {
+            // new contact
+            dbContacts[jid] = {
+                jid,
+                name: incomingData.name,
+                tags: incomingData.group ? [incomingData.group] : [],
+                addedAt: new Date().toISOString(),
+                leadStatus: 'New'
+            };
+            addedCount++;
+        }
+    }
+    
+    saveDb('contacts', dbContacts);
+    res.json({ success: true, addedCount, mergedCount, ignoredCount });
+});
+
 app.post('/api/contacts', (req, res) => {
     saveDb('contacts', req.body.contacts);
     res.json({ success: true });
@@ -941,17 +1614,19 @@ app.post('/api/contacts', (req, res) => {
 
 // Add a single contact
 app.post('/api/contacts/add', (req, res) => {
-    const { name, phone, tags } = req.body;
+    const { name, phone, tags, optIn } = req.body;
     if (!name || !phone) return res.status(400).json({ success: false, message: 'Name and phone are required' });
 
     const jid = phone.replace(/\D/g, '') + '@s.whatsapp.net';
     let contacts = getDb('contacts');
-    if (contacts[jid]) return res.status(409).json({ success: false, message: 'Contact already exists' });
+    if (contacts[jid]) return res.status(409).json({ success: false, message: 'Contact already exists', existingContact: contacts[jid], jid: jid });
 
     contacts[jid] = {
         jid,
         name,
         tags: Array.isArray(tags) ? tags : [],
+        optIn: Boolean(optIn),
+        optInUpdatedAt: new Date().toISOString(),
         addedAt: new Date().toISOString(),
         leadStatus: 'New'
     };
@@ -961,6 +1636,7 @@ app.post('/api/contacts/add', (req, res) => {
 
 // Edit an existing contact
 app.put('/api/contacts/:jid', (req, res) => {
+    const mode = req.body.mode || 'replace'; // 'replace' or 'merge'
     const jid = decodeURIComponent(req.params.jid);
     const { name, phone, tags } = req.body;
     let contacts = getDb('contacts');
@@ -976,10 +1652,27 @@ app.put('/api/contacts/:jid', (req, res) => {
     }
 
     if (name !== undefined) contacts[newJid].name = name;
-    if (tags !== undefined) contacts[newJid].tags = Array.isArray(tags) ? tags : [];
+    if (tags !== undefined) {
+        if (mode === 'merge') {
+            const currentTags = Array.isArray(contacts[newJid].tags) ? contacts[newJid].tags : [];
+            const newTags = Array.isArray(tags) ? tags : [];
+            contacts[newJid].tags = [...new Set([...currentTags, ...newTags])];
+        } else {
+            contacts[newJid].tags = Array.isArray(tags) ? tags : [];
+        }
+    }
 
     saveDb('contacts', contacts);
     res.json({ success: true, jid: newJid });
+});
+
+app.delete('/api/contacts/:jid', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const contacts = getDb('contacts');
+    if (!contacts[jid]) return res.status(404).json({ success: false, message: 'CRM contact not found' });
+    delete contacts[jid];
+    saveDb('contacts', contacts);
+    res.json({ success: true, crmRecordDeleted: true, whatsappAddressBookChanged: false, message: 'CRM record removed. The phone contact and WhatsApp chat were not deleted.' });
 });
 
 // Blacklist APIs
@@ -1026,7 +1719,7 @@ app.get('/api/ai-settings', (req, res) => {
 });
 app.post('/api/ai-settings', (req, res) => {
     const current = getAISettings();
-    const updates = req.body;
+    const updates = req.body || {};
     // Don't overwrite apiKey if masked value sent
     if (updates.apiKey && updates.apiKey.startsWith('***')) {
         updates.apiKey = current.apiKey;
@@ -1120,6 +1813,111 @@ app.post('/api/auto-replies', (req, res) => {
     return res.status(400).json({ success: false });
 });
 
+// Evolution has emitted reactions as both an upsert payload and a message update
+// across versions. Keep the extraction deliberately tolerant so a mobile reaction
+// updates the stored message regardless of its enclosing event shape.
+function extractReactionMessage(payload) {
+    const candidates = [
+        payload?.reactionMessage,
+        payload?.message?.reactionMessage,
+        payload?.messages?.reactionMessage,
+        payload?.update?.reactionMessage,
+        payload?.update?.message?.reactionMessage,
+        payload?.data?.reactionMessage,
+        payload?.data?.message?.reactionMessage
+    ];
+    return candidates.find(item => item?.key?.id) || null;
+}
+
+function applyReactionToConversation(conversations, reactionMessage, fallbackJid) {
+    if (!reactionMessage?.key?.id) return false;
+    const reactedJid = normalizeJid(reactionMessage.key.remoteJid || fallbackJid);
+    let targetThread = conversations[reactedJid] || [];
+    let target = targetThread.find(item => (item.id || item.messageId) === reactionMessage.key.id);
+    // Reactions often arrive with a device/LID remote JID, while the CRM thread
+    // is stored under the phone JID. WhatsApp message IDs are unique enough here,
+    // so recover the actual stored thread by ID before treating it as missing.
+    if (!target) {
+        for (const [threadJid, thread] of Object.entries(conversations)) {
+            const candidate = (thread || []).find(item => (item.id || item.messageId) === reactionMessage.key.id);
+            if (candidate) {
+                target = candidate;
+                targetThread = thread;
+                break;
+            }
+        }
+    }
+    if (!target) {
+        console.log(`[Reaction] Target ${reactionMessage.key.id} is not stored locally yet.`);
+        return false;
+    }
+    const emoji = reactionMessage.text ?? reactionMessage.reaction ?? reactionMessage.emoji;
+    if (emoji) target.reaction = emoji;
+    else delete target.reaction;
+    console.log(`[Reaction] Synced ${emoji || 'removed reaction'} for ${reactionMessage.key.id}`);
+    return true;
+}
+
+// Native WhatsApp poll votes do not arrive as normal text messages. Evolution
+// forwards a pollUpdateMessage (sometimes nested inside an array), so extract
+// it independently and keep the poll card in sync with the linked phone.
+function extractPollUpdates(payload) {
+    const found = [];
+    const seen = new Set();
+    const visit = (value, depth = 0) => {
+        if (!value || typeof value !== 'object' || depth > 8 || seen.has(value)) return;
+        seen.add(value);
+        if (value.pollCreationMessageKey && (value.vote || value.selectedOptions || value.pollUpdates)) found.push(value);
+        if (value.pollUpdateMessage) visit(value.pollUpdateMessage, depth + 1);
+        if (Array.isArray(value)) value.forEach(item => visit(item, depth + 1));
+        else Object.values(value).forEach(item => visit(item, depth + 1));
+    };
+    visit(payload);
+    return found;
+}
+
+function decodePollOption(option) {
+    if (Buffer.isBuffer(option)) return option.toString('utf8');
+    if (option && option.type === 'Buffer' && Array.isArray(option.data)) return Buffer.from(option.data).toString('utf8');
+    if (option instanceof Uint8Array) return Buffer.from(option).toString('utf8');
+    return String(option ?? '').trim();
+}
+
+function applyPollUpdateToConversation(conversations, pollUpdate, fallbackJid) {
+    const pollKey = pollUpdate?.pollCreationMessageKey || pollUpdate?.key || {};
+    const pollId = pollKey.id || pollUpdate?.pollId || pollUpdate?.messageId;
+    const vote = pollUpdate?.vote || pollUpdate;
+    const selectedOptions = vote?.selectedOptions || vote?.options || pollUpdate?.selectedOptions || [];
+    const selections = (Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions])
+        .map(decodePollOption)
+        .filter(Boolean);
+    if (!pollId || !selections.length) return false;
+
+    let target = null;
+    for (const thread of Object.values(conversations)) {
+        const candidate = (thread || []).find(item => (item.id || item.messageId) === pollId);
+        if (candidate) { target = candidate; break; }
+    }
+    if (!target || !target.pollQuestion) {
+        console.log(`[Poll] Target ${pollId} is not stored locally yet.`);
+        return false;
+    }
+
+    const voter = normalizeJid(pollUpdate?.key?.participant || pollUpdate?.participant || pollUpdate?.senderJid || fallbackJid || 'unknown');
+    const normalizedSelections = selections.map(selection => {
+        const match = (target.pollOptions || []).find(option => String(option).trim().toLowerCase() === selection.trim().toLowerCase());
+        return match || selection;
+    });
+    target.pollVoters = { ...(target.pollVoters || {}), [voter]: normalizedSelections };
+    const voteCounts = {};
+    Object.values(target.pollVoters).flat().forEach(selection => {
+        voteCounts[selection] = Number(voteCounts[selection] || 0) + 1;
+    });
+    target.pollVotes = voteCounts;
+    console.log(`[Poll] Synced ${normalizedSelections.join(', ')} for ${pollId}`);
+    return true;
+}
+
 // --- Webhook Listener ---
 app.post(['/webhook', '/webhook/:event'], async (req, res) => {
     res.status(200).send('OK'); // Acknowledge quickly
@@ -1129,16 +1927,66 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
     if (!event.event && req.params.event) {
         event.event = req.params.event.replace(/[-.]/g, '_').toUpperCase();
     }
+    const eventName = String(event.event || '').replace(/[-.]/g, '_').toUpperCase();
     
-    if ((event.event === 'messages.upsert' || event.event === 'MESSAGES_UPSERT') && event.data) {
+    if (eventName === 'MESSAGES_UPDATE' && event.data) {
+        try {
+            const updates = Array.isArray(event.data) ? event.data : (event.data.messages ? event.data.messages : [event.data]);
+            let modified = false;
+            let convos = getDb('conversations');
+            
+            for (const update of updates) {
+                const reactionMessage = extractReactionMessage(update);
+                if (applyReactionToConversation(convos, reactionMessage, update.key?.remoteJid || update.remoteJid || update.jid)) {
+                    modified = true;
+                    continue;
+                }
+                const pollUpdates = extractPollUpdates(update);
+                if (pollUpdates.some(pollUpdate => applyPollUpdateToConversation(convos, pollUpdate, update.key?.remoteJid || update.remoteJid || update.jid))) {
+                    modified = true;
+                    continue;
+                }
+                const rawStatus = update.update?.status ?? update.status ?? update.message?.status;
+                // Evolution/Baileys commonly sends numeric receipts:
+                // 1=PENDING, 2=SERVER_ACK (sent), 3=DELIVERY_ACK,
+                // 4=READ, 5=PLAYED. Store a single stable UI contract.
+                const status = normalizeEvolutionReceipt(rawStatus);
+                const messageKey = update.key || update.update?.key || update.message?.key || {};
+                const msgId = messageKey.id || update.id || update.messageId;
+                const rawJid = messageKey.remoteJid || update.remoteJid || update.jid;
+                const altJid = messageKey.remoteJidAlt || update.remoteJidAlt;
+                if (rawJid && altJid) recordLidMapping(rawJid, altJid);
+                const jid = resolveCanonicalJid(rawJid, altJid);
+                
+                if (status && msgId && jid && convos[jid]) {
+                    const msgIndex = convos[jid].findIndex(m => (m.id === msgId || m.messageId === msgId));
+                    if (msgIndex !== -1 && status) {
+                        const oldStatus = normalizeEvolutionReceipt(convos[jid][msgIndex].status);
+                        if (RECEIPT_RANK[status] >= RECEIPT_RANK[oldStatus]) {
+                            convos[jid][msgIndex].status = status;
+                            modified = true;
+                        }
+                    }
+                }
+            }
+            
+            if (modified) {
+                saveDb('conversations', convos);
+            }
+            // Always notify the browser. It can refresh the active thread and
+            // sidebar even when the message was not previously cached locally.
+            if (typeof io !== 'undefined' && io) io.emit('messages_update', updates);
+        } catch (err) {
+            console.error('[Webhook Messages Update Error]', err.message);
+        }
+    } else if ((eventName === 'MESSAGES_UPSERT' || eventName === 'SEND_MESSAGE') && event.data) {
         try {
             const messageData = event.data;
-            const msg = (messageData.messages && messageData.messages.length > 0) ? messageData.messages[0] : messageData;
-
-            if (msg.key && msg.key.fromMe) return;
+            const messages = Array.isArray(messageData.messages) ? messageData.messages : [messageData];
+            for (const msg of messages) {
 
             const senderJid = msg.key ? msg.key.remoteJid : null;
-            if (!senderJid) return;
+            if (!senderJid || senderJid === 'status@broadcast' || senderJid.includes('@g.us')) continue;
             
             const instanceName = event.instance;
             let incomingText = '';
@@ -1168,8 +2016,26 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                 mediatype = 'video';
                 base64 = msg.message.videoMessage.base64 || null;
             }
+            const reactionMessage = extractReactionMessage(msg);
+            if (reactionMessage?.key?.id) {
+                const threads = getDb('conversations');
+                if (applyReactionToConversation(threads, reactionMessage, senderJid)) {
+                    saveDb('conversations', threads);
+                    if (typeof io !== 'undefined' && io) io.emit('messages_update');
+                }
+                continue;
+            }
+            const pollUpdates = extractPollUpdates(msg);
+            if (pollUpdates.length) {
+                const threads = getDb('conversations');
+                if (pollUpdates.some(pollUpdate => applyPollUpdateToConversation(threads, pollUpdate, senderJid))) {
+                    saveDb('conversations', threads);
+                    if (typeof io !== 'undefined' && io) io.emit('messages_update');
+                }
+                continue;
+            }
             
-            if (!incomingText) return;
+            if (!incomingText) continue;
             const lowerText = incomingText.toLowerCase().trim();
             console.log(`[Inbox] ${senderJid}: "${incomingText}"`);
 
@@ -1227,51 +2093,96 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
             const sentiment = getSentiment(incomingText);
             
             // --- Feature: Live Inbox ---
-            let inbox = getDb('inbox');
-            inbox.unshift({ 
-                jid: senderJid, 
-                name: msg.pushName || 'Unknown', 
-                message: incomingText, 
-                sentiment: sentiment,
-                timestamp: new Date().toISOString() 
-            });
-            if (inbox.length > 200) inbox.pop();
-            saveDb('inbox', inbox);
+            const remoteJidAlt = msg.key?.remoteJidAlt;
+            if (senderJid && remoteJidAlt) recordLidMapping(senderJid, remoteJidAlt);
+            const normalizedSenderJid = resolveCanonicalJid(senderJid, remoteJidAlt);
+            let contacts = getDb('contacts');
+            const sourceTimestamp = isoFromWhatsAppTimestamp(msg.messageTimestamp || msg.message?.messageTimestamp) || new Date().toISOString();
+            const msgId = msg.key?.id || null;
+            const fromMe = msg.key?.fromMe ?? false;
+            const existingThread = getDb('conversations')[normalizedSenderJid] || [];
+            const knownMessage = Boolean(msgId && existingThread.some(item => (item.id || item.messageId) === msgId));
+            const resolvedName = resolveContactIdentity(normalizedSenderJid, contacts, [msg.pushName, msg.message?.extendedTextMessage?.contextInfo?.participantName]);
+            upsertConversationIndex({
+                jid: normalizedSenderJid,
+                name: resolvedName,
+                pushName: msg.pushName || null,
+                message: incomingText,
+                sentiment,
+                timestamp: sourceTimestamp,
+                lastMessageAt: sourceTimestamp
+            }, contacts);
 
             // --- Feature: Contact Tracking (SLA) ---
-            let contacts = getDb('contacts');
-            if (!contacts[senderJid]) contacts[senderJid] = { jid: senderJid, name: msg.pushName || 'Unknown' };
+            if (!contacts[normalizedSenderJid]) contacts[normalizedSenderJid] = { jid: normalizedSenderJid, name: resolvedName };
             
-            contacts[senderJid].lastReceivedAt = new Date().toISOString();
-            contacts[senderJid].sentiment = sentiment;
-            contacts[senderJid].slaBreach = false; // Reset on new message
+            contacts[normalizedSenderJid].lastReceivedAt = sourceTimestamp;
+            contacts[normalizedSenderJid].sentiment = sentiment;
+            contacts[normalizedSenderJid].slaBreach = false; // Reset on new message
             
-            if (!contacts[senderJid].leadStatus || contacts[senderJid].leadStatus === 'Messaged') {
-                contacts[senderJid].leadStatus = 'Replied';
-                contacts[senderJid].statusUpdatedAt = new Date().toISOString();
+            if (!contacts[normalizedSenderJid].leadStatus || contacts[normalizedSenderJid].leadStatus === 'Messaged') {
+                contacts[normalizedSenderJid].leadStatus = 'Replied';
+                contacts[normalizedSenderJid].statusUpdatedAt = sourceTimestamp;
             }
             saveDb('contacts', contacts);
 
             // --- Feature: Conversation Thread Storage ---
-            let threads = getDb('conversations');
-            if (!threads[senderJid]) threads[senderJid] = [];
-            
+            // Some Evolution installs surface a poll response as the chosen
+            // option text rather than a decoded poll-update object. Associate
+            // that response with the newest matching poll so the CRM can show
+            // the vote on the poll card instead of a misleading loose bubble.
+            let pollResponseTo = null;
+            if (!fromMe) {
+                const conversations = getDb('conversations');
+                const thread = Array.isArray(conversations[normalizedSenderJid]) ? conversations[normalizedSenderJid] : [];
+                const selected = String(incomingText || '').trim().toLowerCase();
+                const poll = [...thread].reverse().find(item => item.fromMe && item.pollQuestion && Array.isArray(item.pollOptions) && item.pollOptions.some(option => String(option).trim().toLowerCase() === selected));
+                if (poll) {
+                    const option = poll.pollOptions.find(value => String(value).trim().toLowerCase() === selected);
+                    poll.pollVotes = { ...(poll.pollVotes || {}), [option]: Number(poll.pollVotes?.[option] || 0) + 1 };
+                    pollResponseTo = poll.id || poll.messageId || 'poll';
+                    conversations[normalizedSenderJid] = thread;
+                    saveDb('conversations', conversations);
+                }
+            }
+
             const threadItem = { 
-                direction: 'in', 
+                id: msgId,
+                fromMe: fromMe,
+                direction: fromMe ? 'out' : 'in', 
                 text: incomingText, 
-                name: msg.pushName || 'Unknown', 
+                messageType: mediatype || (msg.message ? Object.keys(msg.message)[0] : 'text'),
+                name: fromMe ? 'Me' : resolvedName,
                 sentiment: sentiment, 
-                timestamp: new Date().toISOString() 
+                status: fromMe ? 'PENDING' : null,
+                timestamp: sourceTimestamp
             };
+            if (pollResponseTo) threadItem.pollResponseTo = pollResponseTo;
             if (relativeUrl) {
                 threadItem.mediaUrl = relativeUrl;
                 threadItem.mediaType = mediatype;
                 threadItem.fileName = fileName || (mediatype === 'image' ? 'photo.png' : 'document.pdf');
             }
             
-            threads[senderJid].push(threadItem);
-            if (threads[senderJid].length > 200) threads[senderJid] = threads[senderJid].slice(-200);
-            saveDb('conversations', threads);
+            upsertThreadMessage(normalizedSenderJid, threadItem);
+
+            // An outbound webhook which did not match a message generated by
+            // this server was written from the linked mobile WhatsApp app.
+            // Pause the chat for 30 minutes so AI cannot interrupt a human.
+            if (fromMe && !knownMessage) {
+                const manualSession = getSessionContext(normalizedSenderJid);
+                manualSession.escalated = true;
+                manualSession.lastIntent = 'mobile_manual_message';
+                manualSession.manualHoldUntil = new Date(Date.now() + MANUAL_HANDOFF_WINDOW_MS).toISOString();
+                saveSessionContext(normalizedSenderJid, manualSession);
+                console.log(`[Human Handoff] Mobile message detected for ${normalizedSenderJid}; AI paused for 30 minutes.`);
+            }
+
+            // Emit update to UI
+            if (typeof io !== 'undefined' && io) {
+                io.emit('messages_update');
+                io.emit('new_message', { jid: normalizedSenderJid, message: threadItem });
+            }
 
             // --- Feature: Send-Time Analytics ---
             const replyHour = new Date().getHours();
@@ -1280,16 +2191,19 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
             sendTimeStats.hours[replyHour] = (sendTimeStats.hours[replyHour] || 0) + 1;
             saveDb('send_time_stats', sendTimeStats);
 
+            // Outgoing messages are stored and broadcast above, but must not
+            // trigger lead scoring, blacklisting, or an automated reply.
+            if (!fromMe) {
             // --- Feature: Hot Leads & Auto-Sync ---
             const HOT_KEYWORDS = ['pricing', 'price', 'cost', 'fee', 'registration', 'register', 'interested', 'details', 'info', 'enroll', 'join', 'how much', 'apply', 'collaborate', 'collaboration', 'partner', 'partnership', 'mou', 'tie up'];
             const matchedKeyword = HOT_KEYWORDS.find(kw => lowerText.includes(kw));
             
             if (matchedKeyword || sentiment === 'Positive') {
                 let hotLeads = getDb('hot_leads');
-                const alreadyTagged = hotLeads.find(l => l.phone === senderJid);
+                const alreadyTagged = hotLeads.find(l => l.phone === normalizedSenderJid);
                 if (!alreadyTagged) {
                     const newLead = {
-                        phone: senderJid,
+                        phone: normalizedSenderJid,
                         name: msg.pushName || 'Unknown',
                         keyword: matchedKeyword || 'Sentiment',
                         sentiment: sentiment,
@@ -1298,7 +2212,7 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                     };
                     hotLeads.unshift(newLead);
                     saveDb('hot_leads', hotLeads);
-                    console.log(`[🔥 Hot Lead] Tagged ${senderJid}`);
+                    console.log(`[🔥 Hot Lead] Tagged ${normalizedSenderJid}`);
                     
                     // AUTO-SYNC TO GOOGLE SHEETS
                     syncLeadToSheet(newLead);
@@ -1308,29 +2222,45 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
             // --- Feature: Auto-Blacklisting ---
             if (['stop', 'unsubscribe', 'optout', 'remove'].includes(lowerText)) {
                 let blacklist = getDb('blacklist');
-                if (!blacklist.includes(senderJid)) {
-                    blacklist.push(senderJid);
+                if (!blacklist.includes(normalizedSenderJid)) {
+                    blacklist.push(normalizedSenderJid);
                     saveDb('blacklist', blacklist);
-                    console.log(`[Blacklist] System auto-banned ${senderJid} per user request.`);
+                    console.log(`[Blacklist] System auto-banned ${normalizedSenderJid} per user request.`);
                     
                     // Reply confirming removal
-                    await sendSmartMessage(senderJid, instanceName, "You have been successfully removed from our list. You will not receive any more automated messages.", event.apikey);
+                    await sendSmartMessage(normalizedSenderJid, instanceName, "You have been successfully removed from our list. You will not receive any more automated messages.", event.apikey);
                 }
-                return; // Stop processing further rules
+                continue; // Do not allow this item to trigger additional automation.
             }
 
             // --- Feature: Live Inbox Escalation Scan & Handoff Lock ---
-            const currentSession = getSessionContext(senderJid);
+            if (globalAiPaused) {
+                console.log(`[Master AI Pause] Global AI is paused. Ignoring automated response for ${normalizedSenderJid}`);
+                continue;
+            }
+
+            const currentSession = getSessionContext(normalizedSenderJid);
+            const messageAge = Date.now() - new Date(sourceTimestamp).getTime();
+            if (knownMessage || !Number.isFinite(messageAge) || messageAge > AI_INBOUND_FRESHNESS_MS) {
+                logAutomationAudit('webhook', normalizedSenderJid, 'blocked', { reason: knownMessage ? 'Duplicate webhook message' : 'Inbound message is outside the AI freshness window', messageId: msgId });
+                console.log(`[AI Safety] Ignoring ${knownMessage ? 'duplicate' : 'old'} inbound message for ${normalizedSenderJid}.`);
+                continue;
+            }
+            if (currentSession.manualHoldUntil && new Date(currentSession.manualHoldUntil).getTime() > Date.now()) {
+                logAutomationAudit('webhook', normalizedSenderJid, 'blocked', { reason: 'Recent mobile/manual conversation hold', until: currentSession.manualHoldUntil, messageId: msgId });
+                console.log(`[Human Handoff] Recent human activity blocks AI for ${normalizedSenderJid} until ${currentSession.manualHoldUntil}.`);
+                continue;
+            }
             if (currentSession.escalated === true && !lowerText.includes('re-enable ai')) {
-                console.log(`[Human Handoff Lock] Conversation with ${senderJid} is escalated. Skipping automated responder.`);
-                return;
+                console.log(`[Human Handoff] Conversation with ${normalizedSenderJid} is escalated. Skipping automated responder.`);
+                continue;
             }
             
             // Re-enable AI command (for testing/ops convenience)
             if (lowerText.includes('re-enable ai')) {
                 currentSession.escalated = false;
-                saveSessionContext(senderJid, currentSession);
-                console.log(`[Human Handoff Lock] Re-enabled AI automated responder for ${senderJid}`);
+                saveSessionContext(normalizedSenderJid, currentSession);
+                console.log(`[Human Handoff Lock] Re-enabled AI automated responder for ${normalizedSenderJid}`);
             }
 
             const kb = loadKnowledgeBase();
@@ -1345,7 +2275,7 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                 
                 // Flag in inbox logs
                 let inboxDb = getDb('inbox');
-                const jidMatch = inboxDb.findIndex(m => m.jid === senderJid);
+                const jidMatch = inboxDb.findIndex(m => m.jid === normalizedSenderJid);
                 if (jidMatch !== -1) {
                     inboxDb[jidMatch].escalated = true;
                     inboxDb[jidMatch].escalationTrigger = matchedEscalation;
@@ -1356,17 +2286,17 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                 // Flag in session state context memory
                 currentSession.escalated = true;
                 currentSession.lastIntent = 'human_escalation';
-                saveSessionContext(senderJid, currentSession);
+                saveSessionContext(normalizedSenderJid, currentSession);
                 
                 // Dispatch recovery handoff message
                 const handoffText = kb?.fallbacks?.handoff || "Connecting you with our support operations team. A manager will reply directly shortly.";
                 const escalationDeskStr = `\n\nDirect Contacts:\n📞 Phone: ${kb.escalation.finance.phone} (${kb.escalation.finance.department})\n✉️ Email: ${kb.escalation.finance.email}`;
                 
-                await sendSmartMessage(senderJid, instanceName, handoffText + escalationDeskStr + "\n\n— ScholarVault Team", event.apikey);
+                await sendSmartMessage(normalizedSenderJid, instanceName, handoffText + escalationDeskStr + "\n\n— ScholarVault Team", event.apikey);
 
                 // Dispatch WhatsApp push alert to Shyam (admin)
                 const adminJid = "918610100624@s.whatsapp.net";
-                const cleanPhone = senderJid.replace('@s.whatsapp.net', '');
+                const cleanPhone = normalizedSenderJid.replace('@s.whatsapp.net', '');
                 const formattedPhone = (cleanPhone.startsWith('91') && cleanPhone.length === 12) 
                     ? `+${cleanPhone.slice(0, 2)}-${cleanPhone.slice(2, 7)}-${cleanPhone.slice(7)}` 
                     : `+${cleanPhone}`;
@@ -1375,7 +2305,7 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                 console.log(`[Admin Alert] Dispatching priority handoff WhatsApp push notification to Shyam...`);
                 await sendSmartMessage(adminJid, instanceName, alertMsg, event.apikey);
 
-                return; // Stop automation immediately
+                continue; // Keep processing any other messages in this webhook batch.
             }
 
             // --- Feature: Smart Auto Responder Routing (AI-First) ---
@@ -1393,7 +2323,8 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                 const delaySec = (matchedRule.delayMinutes || 0) * 60 * 1000;
                 console.log(`[Auto-Reply] Strict Trigger Match "${matchedRule.trigger}" → delay ${matchedRule.delayMinutes}min`);
                 setTimeout(async () => {
-                    await sendSmartMessage(senderJid, instanceName, matchedRule.reply, event.apikey);
+                    if (globalAiPaused) return;
+                    await sendSmartMessage(normalizedSenderJid, instanceName, matchedRule.reply, event.apikey);
                 }, delaySec);
             } else if (aiSettings.enabled) {
                 // Pre-filtering check to prevent toxic, administrative, or off-topic hallucinations
@@ -1406,10 +2337,10 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                         console.log(`[🚨 Guardrail Auto-Escalate] Hostile or data-modification intent detected. Flagging JID for human takeover.`);
                         currentSession.escalated = true;
                         currentSession.lastIntent = 'hostile_guardrail';
-                        saveSessionContext(senderJid, currentSession);
+                        saveSessionContext(normalizedSenderJid, currentSession);
                         
                         let inboxDb = getDb('inbox');
-                        const jidMatch = inboxDb.findIndex(m => m.jid === senderJid);
+                        const jidMatch = inboxDb.findIndex(m => m.jid === normalizedSenderJid);
                         if (jidMatch !== -1) {
                             inboxDb[jidMatch].escalated = true;
                             inboxDb[jidMatch].escalationTrigger = 'hostile_guardrail_intercept';
@@ -1420,27 +2351,29 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
 
                     const delaySec = (Math.floor(Math.random() * 2) + 1) * 1000; // 1-2 second realistic human delay
                     setTimeout(async () => {
-                        await sendSmartMessage(senderJid, instanceName, filterResult.reply + "\n\n— ScholarVault Team", event.apikey);
+                        if (globalAiPaused) return;
+                        await sendSmartMessage(normalizedSenderJid, instanceName, filterResult.reply + "\n\n— ScholarVault Team", event.apikey);
                     }, delaySec);
-                    return; // Halt execution and skip AI call completely
+                    continue; // Skip AI for this item only.
                 }
 
                 // Conversational query: Route directly to Mistral AI
                 console.log(`[AI Routing] Directing conversational query "${incomingText}" to Mistral AI...`);
                 const aiDelay = (Math.floor(Math.random() * 3) + 2) * 1000; // 2-4 second human-like delay
                 setTimeout(async () => {
+                    if (globalAiPaused) return;
                     try {
-                        const aiReply = await generateAIReply(incomingText, senderJid, msg.pushName || 'Friend');
+                        const aiReply = await generateAIReply(incomingText, normalizedSenderJid, msg.pushName || 'Friend');
                         if (aiReply) {
-                            await sendSmartMessage(senderJid, instanceName, aiReply, event.apikey);
-                            console.log(`[AI Routing] Sent AI reply to ${senderJid}`);
+                            await sendSmartMessage(normalizedSenderJid, instanceName, aiReply, event.apikey);
+                            console.log(`[AI Routing] Sent AI reply to ${normalizedSenderJid}`);
 
                             // Check if the conversation was just escalated during this AI turn
-                            const updatedSession = getSessionContext(senderJid);
+                            const updatedSession = getSessionContext(normalizedSenderJid);
                             if (updatedSession.escalated === true && updatedSession.lastIntent === 'ai_requested_handoff') {
                                 // 1. Flag in inbox database as escalated
                                 let inboxDb = getDb('inbox');
-                                const jidMatch = inboxDb.findIndex(m => m.jid === senderJid);
+                                const jidMatch = inboxDb.findIndex(m => m.jid === normalizedSenderJid);
                                 if (jidMatch !== -1) {
                                     inboxDb[jidMatch].escalated = true;
                                     inboxDb[jidMatch].escalationTrigger = 'ai_requested_handoff';
@@ -1450,7 +2383,7 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
 
                                 // 2. Send immediate push WhatsApp alert to Shyam (admin)
                                 const adminJid = "918610100624@s.whatsapp.net";
-                                const cleanPhone = senderJid.replace('@s.whatsapp.net', '');
+                                const cleanPhone = normalizedSenderJid.replace('@s.whatsapp.net', '');
                                 const formattedPhone = (cleanPhone.startsWith('91') && cleanPhone.length === 12) 
                                     ? `+${cleanPhone.slice(0, 2)}-${cleanPhone.slice(2, 7)}-${cleanPhone.slice(7)}` 
                                     : `+${cleanPhone}`;
@@ -1460,7 +2393,7 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                                 await sendSmartMessage(adminJid, instanceName, alertMsg, event.apikey);
                             }
                         } else {
-                            console.log(`[AI Routing] No AI reply generated for ${senderJid}`);
+                            console.log(`[AI Routing] No AI reply generated for ${normalizedSenderJid}`);
                         }
                     } catch (aiErr) {
                         console.error('[AI Routing] Error:', aiErr.message);
@@ -1473,9 +2406,12 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
                     const delaySec = (broadMatch.delayMinutes || 0) * 60 * 1000;
                     console.log(`[Auto-Reply Fallback] Substring Match "${broadMatch.trigger}" → delay ${broadMatch.delayMinutes}min`);
                     setTimeout(async () => {
-                        await sendSmartMessage(senderJid, instanceName, broadMatch.reply, event.apikey);
+                        if (globalAiPaused) return;
+                        await sendSmartMessage(normalizedSenderJid, instanceName, broadMatch.reply, event.apikey);
                     }, delaySec);
                 }
+            }
+            }
             }
         } catch (err) {
             console.error('[Webhook Error]', err.message);
@@ -1483,27 +2419,54 @@ app.post(['/webhook', '/webhook/:event'], async (req, res) => {
     }
 });
 
-// --- Cron Loop: Scheduler & Drip Engine ---
-// Runs every 1 minute
+// --- Campaign Scheduler & Drip Engine ---
+// One WhatsApp instance must send campaigns serially. Starting every due
+// campaign at once causes overlapping presence/sends and makes cancellation
+// unpredictable. The earliest scheduled campaign therefore owns the queue.
+let campaignSchedulerBusy = false;
+function isCampaignQuietNow(quietHours) {
+    const start = String(quietHours?.start || '');
+    const end = String(quietHours?.end || '');
+    if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end) || start === end) return false;
+    const minutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const toMinutes = value => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+    const startMinutes = toMinutes(start), endMinutes = toMinutes(end);
+    return startMinutes < endMinutes ? minutes >= startMinutes && minutes < endMinutes : minutes >= startMinutes || minutes < endMinutes;
+}
+function campaignDailyCount(campaignId) {
+    const usage = getDb('campaign_daily_usage');
+    const day = new Date().toISOString().slice(0, 10);
+    return Number(usage[`${campaignId}:${day}`]?.sent || 0);
+}
+function recordCampaignDailySend(campaignId) {
+    const usage = getDb('campaign_daily_usage');
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `${campaignId}:${day}`;
+    usage[key] = { sent: Number(usage[key]?.sent || 0) + 1, updatedAt: new Date().toISOString() };
+    saveDb('campaign_daily_usage', usage);
+}
 setInterval(async () => {
+    if (campaignSchedulerBusy) return;
+    campaignSchedulerBusy = true;
     try {
         const now = Date.now();
         // 1. Check Scheduled Campaigns
         let campaigns = getDb('campaigns');
-        let campaignsUpdated = false;
-
-        for (let campId in campaigns) {
-            let camp = campaigns[campId];
-            if (camp.status === 'scheduled' && camp.scheduledFor <= now) {
-                console.log(`[Cron] Starting scheduled campaign: ${camp.name}`);
-                camp.status = 'processing';
-                campaignsUpdated = true;
-                
-                // Fire and forget the bulk send process so it doesn't block
-                processBulkCampaign(campId, camp);
+        const activeCampaign = Object.values(campaigns).some(campaign => campaign.status === 'processing' || campaign.status === 'running');
+        if (!activeCampaign) {
+            const next = Object.entries(campaigns)
+                .filter(([, campaign]) => campaign.status === 'scheduled' && Number(campaign.scheduledFor || 0) <= now && !isCampaignQuietNow(campaign.quietHours))
+                .sort(([, a], [, b]) => Number(a.scheduledFor || 0) - Number(b.scheduledFor || 0) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0))[0];
+            if (next) {
+                const [campId, camp] = next;
+                console.log(`[Campaign Queue] Starting: ${camp.name}`);
+                campaigns[campId] = { ...camp, status: 'processing', startedAt: new Date().toISOString() };
+                saveDb('campaigns', campaigns);
+                // Do not await the long-running campaign. Its processing state
+                // prevents the next queue item from beginning prematurely.
+                processBulkCampaign(campId, campaigns[campId]).catch(error => console.error(`[Campaign Queue] ${camp.name} failed:`, error.message));
             }
         }
-        if (campaignsUpdated) saveDb('campaigns', campaigns);
 
         // 2. Check Drip Follow-ups
         let dripState = getDb('drip_state');
@@ -1514,6 +2477,12 @@ setInterval(async () => {
             if (userDrip.pendingFollowups && userDrip.pendingFollowups.length > 0) {
                 let nextFollowup = userDrip.pendingFollowups[0];
                 if (nextFollowup.scheduledFor <= now) {
+                    // Keep the follow-up queued while Master AI is paused;
+                    // do not silently send it or discard it.
+                    if (globalAiPaused) {
+                        console.log(`[Master AI Pause] Drip follow-up held for ${jid}`);
+                        continue;
+                    }
                     // --- Smart Drip: Skip if prospect already replied ---
                     const replyTimes = getDb('reply_times');
                     const lastReply = replyTimes[jid] || 0;
@@ -1526,7 +2495,7 @@ setInterval(async () => {
                     }
                     console.log(`[Cron] Executing Drip Follow-up for ${jid}`);
                     // Send message with buttons if preserved
-                    await sendSmartMessage(jid, nextFollowup.instance, nextFollowup.message, null, nextFollowup.buttons);
+                    await sendSmartMessage(jid, nextFollowup.instance, nextFollowup.message, null, nextFollowup.buttons, false, 'bot');
                     
                     // Remove the executed followup
                     userDrip.pendingFollowups.shift();
@@ -1543,8 +2512,10 @@ setInterval(async () => {
 
     } catch (err) {
         console.error('[Cron Error]', err.message);
+    } finally {
+        campaignSchedulerBusy = false;
     }
-}, 60000);
+}, 5000);
 
 // --- SLA Monitor Task (runs every 5 mins) ---
 setInterval(() => {
@@ -1572,15 +2543,41 @@ setInterval(() => {
 
 async function processBulkCampaign(campId, campData) {
     const { contacts, messageTemplate, instanceName, apiKey, delayBetweenMs, dripFollowups, mediaBase64, mediaFileName } = campData;
+    // Scheduled work must not depend on a browser-only value. Older queued
+    // campaigns lacked instanceName and later attempted to send via /undefined.
+    const resolvedInstanceName = instanceName || getDefaultInstanceName();
+    if (!resolvedInstanceName) {
+        console.error(`[Campaign] Cannot start ${campData.name}: no WhatsApp instance is configured.`);
+        return;
+    }
+    const activeAttachments = Array.isArray(campData.attachments) && campData.attachments.length > 0
+        ? campData.attachments
+        : (mediaBase64 ? [{ base64: mediaBase64, name: mediaFileName || 'campaign_poster.png' }] : []);
     let sentCount = 0;
     let failedCount = 0;
+    let details = [];
+    let dailyLimitReached = false;
 
-    const hasMedia = !!mediaBase64;
+    const hasMedia = activeAttachments.length > 0;
     if (hasMedia) {
         console.log(`[Campaign] Image attached: ${mediaFileName || 'poster'} — will send as media+caption`);
     }
 
     for (let contact of contacts) {
+        // Re-read the campaign state between recipients. A stop request is
+        // therefore honoured before the next contact is contacted, even while
+        // a long-running campaign is already in progress.
+        const liveCampaign = getDb('campaigns')[campId];
+        if (!liveCampaign || liveCampaign.status === 'stopped') {
+            console.log(`[Campaign] Stopped ${campData.name} before the next recipient.`);
+            break;
+        }
+        const dailyLimit = Math.max(0, Number(campData.dailyLimit || 0));
+        if (dailyLimit && campaignDailyCount(campId) >= dailyLimit) {
+            dailyLimitReached = true;
+            console.log(`[Campaign] Daily limit reached for ${campData.name}; pausing remaining recipients.`);
+            break;
+        }
         let targetJid = contact.jid || contact.phone;
         if (!targetJid) continue;
 
@@ -1590,6 +2587,7 @@ async function processBulkCampaign(campId, campData) {
             if (isNaN(prefix) && !prefix.startsWith('status')) { // Skip non-numeric prefixes, allowing system JIDs like 'status' if needed
                 console.log(`[Sender] Skipping invalid JID (non-numeric): ${targetJid}`);
                 failedCount++;
+                details.push({ phone: targetJid, name: contact.name || '-', status: 'failed', reason: 'Invalid JID Format (non-numeric)' });
                 continue;
             }
         }
@@ -1597,15 +2595,51 @@ async function processBulkCampaign(campId, campData) {
         const personalizedMessage = messageTemplate.replace('{{name}}', contact.name || 'Friend');
         let sentResult;
 
+        const mediaOrder = campData.mediaOrder || 'caption';
         if (hasMedia) {
-            // Send image with caption
-            sentResult = await sendMediaMessage(targetJid, instanceName, mediaBase64, personalizedMessage, mediaFileName, apiKey);
+            let chainFailed = false;
+            if (mediaOrder === 'media_first') {
+                for (let i=0; i < activeAttachments.length; i++) {
+                    sentResult = await sendMediaMessageCore(targetJid, resolvedInstanceName, activeAttachments[i].base64, '', activeAttachments[i].name, apiKey, true, 'campaign');
+                    if (!sentResult.success) { chainFailed = true; break; }
+                }
+                if (!chainFailed) {
+                    const pollOpts = campData.buttons || campData.pollOptions;
+                    sentResult = await sendSmartMessageCore(targetJid, resolvedInstanceName, personalizedMessage, apiKey, pollOpts || [], true, 'campaign', campData.pollQuestion);
+                }
+            } else if (mediaOrder === 'text_first') {
+                sentResult = await sendSmartMessageCore(targetJid, resolvedInstanceName, personalizedMessage, apiKey, [], false, 'campaign', '');
+                chainFailed = !sentResult.success;
+                for (let i=0; i < activeAttachments.length && !chainFailed; i++) {
+                    sentResult = await sendMediaMessageCore(targetJid, resolvedInstanceName, activeAttachments[i].base64, '', activeAttachments[i].name, apiKey, true, 'campaign');
+                    if (!sentResult.success) chainFailed = true;
+                }
+                const pollOpts = campData.buttons || campData.pollOptions;
+                if (!chainFailed && pollOpts && pollOpts.length > 0) {
+                    sentResult = await sendSmartMessageCore(targetJid, resolvedInstanceName, '', apiKey, pollOpts, true, 'campaign', campData.pollQuestion);
+                }
+            } else {
+                for (let i=0; i < activeAttachments.length; i++) {
+                    const cap = (i === 0) ? personalizedMessage : '';
+                    sentResult = await sendMediaMessageCore(targetJid, resolvedInstanceName, activeAttachments[i].base64, cap, activeAttachments[i].name, apiKey, true, 'campaign');
+                    if (!sentResult.success) { chainFailed = true; break; }
+                }
+                const pollOpts = campData.buttons || campData.pollOptions;
+                if (!chainFailed && pollOpts && pollOpts.length > 0) {
+                    sentResult = await sendSmartMessageCore(targetJid, resolvedInstanceName, '', apiKey, pollOpts, true, 'campaign', campData.pollQuestion);
+                }
+            }
+            if (chainFailed) console.warn(`[Campaign] Delivery chain stopped before poll for ${targetJid}: ${sentResult?.reason || 'media send failed'}`);
         } else {
-            // Text-only campaign (original behavior)
-            sentResult = await sendSmartMessage(targetJid, instanceName, personalizedMessage, apiKey, campData.buttons || []);
+            const pollOpts = campData.buttons || campData.pollOptions;
+            sentResult = await sendSmartMessageCore(targetJid, resolvedInstanceName, personalizedMessage, apiKey, pollOpts || [], false, 'campaign', campData.pollQuestion);
         }
-        if (sentResult) {
+        
+        const isSuccess = sentResult && sentResult.success;
+        if (isSuccess) {
             sentCount++;
+            if (dailyLimit) recordCampaignDailySend(campId);
+            details.push({ phone: targetJid, name: contact.name || '-', status: 'sent', reason: '' });
             // Auto-update lead status to Messaged in pipeline
             let contactsDb = getDb('contacts');
             const normalizedJid = targetJid.includes('@') ? targetJid : `${targetJid}@s.whatsapp.net`;
@@ -1620,12 +2654,12 @@ async function processBulkCampaign(campId, campData) {
             if (dripFollowups && dripFollowups.length > 0) {
                 let dripState = getDb('drip_state');
                 dripState[contact.jid] = {
-                    instance: instanceName,
+                    instance: resolvedInstanceName,
                     campaignSentAt: Date.now(), // Used by Smart Drip reply check
                     pendingFollowups: dripFollowups.map(drip => ({
                         message: drip.message.replace('{{name}}', contact.name || 'Friend'),
                         scheduledFor: Date.now() + (drip.delayHours * 3600 * 1000),
-                        instance: instanceName,
+                        instance: resolvedInstanceName,
                         buttons: drip.buttons || []
                     }))
                 };
@@ -1633,6 +2667,7 @@ async function processBulkCampaign(campId, campData) {
             }
         } else {
             failedCount++;
+            details.push({ phone: targetJid, name: contact.name || '-', status: 'failed', reason: sentResult ? sentResult.reason : 'Failed locally' });
         }
         // Delay between batch messages
         await new Promise(r => setTimeout(r, delayBetweenMs || 5000));
@@ -1640,10 +2675,13 @@ async function processBulkCampaign(campId, campData) {
 
     let campaigns = getDb('campaigns');
     if (campaigns[campId]) {
-        campaigns[campId].status = 'completed';
+        const wasStopped = campaigns[campId].status === 'stopped';
+        campaigns[campId].status = wasStopped ? 'stopped' : dailyLimitReached ? 'paused_limit' : 'completed';
         campaigns[campId].sentCount = sentCount;
         campaigns[campId].failedCount = failedCount;
-        campaigns[campId].completedAt = new Date().toISOString();
+        campaigns[campId].details = details;
+        if (dailyLimitReached) campaigns[campId].pauseReason = `Daily sending limit of ${campData.dailyLimit} reached`;
+        if (!wasStopped && !dailyLimitReached) campaigns[campId].completedAt = new Date().toISOString();
         saveDb('campaigns', campaigns);
         console.log(`[Campaign] Finished ${campData.name}: ${sentCount} sent, ${failedCount} failed.`);
     }
@@ -1658,16 +2696,84 @@ app.post('/api/campaigns', (req, res) => {
     const scheduledFor = req.body.scheduledFor || Date.now();
     
     campaigns[campId] = {
+        ...req.body,
         name: req.body.name || 'Unnamed Campaign',
-        status: scheduledFor <= Date.now() ? 'scheduled' : 'scheduled',
+        status: 'scheduled',
         createdAt: new Date().toISOString(),
         scheduledFor: scheduledFor,
-        ...req.body
+        // Persist the resolved instance so scheduled and immediate work share
+        // the same Evolution connection context.
+        instanceName: req.body.instanceName || getDefaultInstanceName()
     };
     saveDb('campaigns', campaigns);
     res.json({ success: true, message: 'Campaign Queued', campId });
 });
 app.get('/api/campaigns', (req, res) => res.json({ success: true, campaigns: getDb('campaigns') }));
+app.post('/api/campaigns/preflight', (req, res) => {
+    const supplied = Array.isArray(req.body?.contacts) ? req.body.contacts : [];
+    const contactsDb = getDb('contacts');
+    const blacklist = new Set(getDb('blacklist').map(normalizeJid));
+    const campaigns = getDb('campaigns');
+    const duplicateDays = Math.min(365, Math.max(0, Number(req.body?.duplicateWindowDays || 30)));
+    const duplicateCutoff = Date.now() - duplicateDays * 86400000;
+    const requireOptIn = Boolean(req.body?.requireOptIn);
+    const skipRecent = Boolean(req.body?.skipRecentRecipients);
+    const recentRecipients = new Set();
+    for (const campaign of Object.values(campaigns)) {
+        if (new Date(campaign.createdAt || 0).getTime() < duplicateCutoff) continue;
+        for (const recipient of Array.isArray(campaign.contacts) ? campaign.contacts : []) {
+            const jid = normalizeJid(recipient.jid || recipient.phone);
+            if (jid) recentRecipients.add(jid);
+        }
+    }
+    const seen = new Set();
+    const summary = { supplied: supplied.length, eligible: [], invalid: [], blacklisted: [], duplicateInList: [], recentlyMessaged: [], noRecordedOptIn: [], unverified: [] };
+    for (const candidate of supplied) {
+        const jid = normalizeJid(candidate?.jid || candidate?.phone);
+        const phone = jid.split('@')[0];
+        if (!jid || !/^\d{8,15}$/.test(phone)) { summary.invalid.push(candidate?.phone || candidate?.jid || 'Unknown'); continue; }
+        if (seen.has(jid)) { summary.duplicateInList.push(jid); continue; }
+        seen.add(jid);
+        if (candidate && candidate.valid === false) { summary.invalid.push(jid); continue; }
+        if (!candidate || candidate.valid !== true) summary.unverified.push(jid);
+        const contact = contactsDb[jid] || {};
+        const optedIn = contact.optIn === true || contact.optedIn === true || String(contact.optInStatus || '').toLowerCase() === 'opted_in';
+        if (blacklist.has(jid)) { summary.blacklisted.push(jid); continue; }
+        if (requireOptIn && !optedIn) { summary.noRecordedOptIn.push(jid); continue; }
+        if (recentRecipients.has(jid)) {
+            summary.recentlyMessaged.push(jid);
+            if (skipRecent) continue;
+        }
+        summary.eligible.push({ ...candidate, jid, phone, name: candidate?.name || contact.name || '' });
+    }
+    const delaySeconds = Math.max(3, Number(req.body?.delayBetweenMs || 5000) / 1000);
+    const estimatedSeconds = Math.max(0, summary.eligible.length - 1) * delaySeconds;
+    const dailyLimit = Math.max(0, Number(req.body?.dailyLimit || 0));
+    res.json({
+        success: true,
+        eligibleContacts: summary.eligible,
+        counts: {
+            supplied: summary.supplied, eligible: summary.eligible.length, invalid: summary.invalid.length,
+            blacklisted: summary.blacklisted.length, duplicateInList: summary.duplicateInList.length,
+            recentlyMessaged: summary.recentlyMessaged.length, noRecordedOptIn: summary.noRecordedOptIn.length,
+            unverified: summary.unverified.length
+        },
+        samples: { recentlyMessaged: summary.recentlyMessaged.slice(0, 5), blacklisted: summary.blacklisted.slice(0, 5), noRecordedOptIn: summary.noRecordedOptIn.slice(0, 5) },
+        estimatedSeconds, dailyLimit, quietHours: req.body?.quietHours || null
+    });
+});
+app.post('/api/campaigns/:campId/stop', (req, res) => {
+    const campaigns = getDb('campaigns');
+    const campaign = campaigns[req.params.campId];
+    if (!campaign) return res.status(404).json({ success: false, message: 'Campaign not found' });
+    if (campaign.status === 'completed') return res.status(409).json({ success: false, message: 'Completed campaigns cannot be stopped' });
+    campaign.status = 'stopped';
+    campaign.stoppedAt = new Date().toISOString();
+    campaign.stopReason = 'Stopped by operator';
+    saveDb('campaigns', campaigns);
+    if (typeof io !== 'undefined' && io) io.emit('campaign_update', { id: req.params.campId, status: 'stopped' });
+    res.json({ success: true, message: 'Campaign stopped. No additional recipients will be contacted.' });
+});
 app.delete('/api/campaigns', (req, res) => {
     saveDb('campaigns', {});
     res.json({ success: true, message: 'Campaigns cleared' });
@@ -1701,7 +2807,7 @@ app.delete('/api/contacts/:jid/tag', (req, res) => {
 // Update profile details dynamically from the Live Inbox CRM panel
 app.post('/api/contacts/:jid/profile', async (req, res) => {
     const jid = decodeURIComponent(req.params.jid);
-    const { email, institution, role, country } = req.body;
+    const { email, institution, role, country, optIn } = req.body;
     
     try {
         const sessionContext = getSessionContext(jid);
@@ -1718,6 +2824,10 @@ app.post('/api/contacts/:jid/profile', async (req, res) => {
         if (institution !== undefined) contacts[jid].institution = institution;
         if (role !== undefined) contacts[jid].role = role;
         if (country !== undefined) contacts[jid].country = country;
+        if (optIn !== undefined) {
+            contacts[jid].optIn = Boolean(optIn);
+            contacts[jid].optInUpdatedAt = new Date().toISOString();
+        }
         saveDb('contacts', contacts);
 
         // Sync to Sheets
@@ -1749,6 +2859,130 @@ app.post('/api/contacts/:jid/followup', (req, res) => {
     }
 });
 
+// Local sales workspace metadata. These fields belong to the CRM only and are
+// never sent to WhatsApp or copied back into a contact's WhatsApp profile.
+function serializeContactWorkspace(context = {}, contact = {}) {
+    return {
+        priority: context.priority || contact.priority || 'Warm',
+        leadSource: context.leadSource || contact.leadSource || '',
+        interests: Array.isArray(context.interests) ? context.interests : (Array.isArray(contact.interests) ? contact.interests : []),
+        nextAction: context.nextAction || '',
+        followUpAt: context.followUpAt || context.followUpDate || contact.followUpDate || '',
+        followUpDate: context.followUpDate || context.followUpAt || contact.followUpDate || '',
+        notes: Array.isArray(context.crmNotes) ? context.crmNotes : (Array.isArray(context.notes) ? context.notes : []),
+        crmNotes: Array.isArray(context.crmNotes) ? context.crmNotes : (Array.isArray(context.notes) ? context.notes : []),
+        timeline: Array.isArray(context.timeline) ? context.timeline : []
+    };
+}
+app.get('/api/contacts/:jid/workspace', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const context = getSessionContext(jid);
+    const contacts = getDb('contacts');
+    const contact = contacts[jid] || {};
+    res.json({ success: true, workspace: serializeContactWorkspace(context, contact) });
+});
+
+app.post('/api/contacts/:jid/workspace', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const body = req.body || {};
+    const context = getSessionContext(jid);
+    const contacts = getDb('contacts');
+    if (!contacts[jid]) contacts[jid] = { jid };
+    if (body.followUpAt !== undefined) body.followUpDate = body.followUpAt;
+    for (const field of ['priority', 'leadSource', 'nextAction', 'followUpDate']) {
+        if (body[field] !== undefined) context[field] = String(body[field] || '');
+    }
+    if (body.interests !== undefined) context.interests = Array.isArray(body.interests) ? body.interests.map(String).filter(Boolean) : [];
+    if (body.note && String(body.note).trim()) {
+        context.crmNotes = Array.isArray(context.crmNotes) ? context.crmNotes : [];
+        context.crmNotes.unshift({ id: `note_${Date.now()}`, text: String(body.note).trim(), createdAt: new Date().toISOString(), private: true });
+    }
+    context.timeline = Array.isArray(context.timeline) ? context.timeline : [];
+    context.timeline.unshift({ id: `activity_${Date.now()}`, type: body.note ? 'private_note' : 'crm_update', label: body.note ? 'Private note added' : 'CRM workspace updated', createdAt: new Date().toISOString() });
+    context.timeline = context.timeline.slice(0, 250);
+    context.followUpAt = context.followUpDate || '';
+    Object.assign(contacts[jid], { priority: context.priority, leadSource: context.leadSource, interests: context.interests, followUpDate: context.followUpDate, nextAction: context.nextAction });
+    saveSessionContext(jid, context); saveDb('contacts', contacts);
+    res.json({ success: true, workspace: serializeContactWorkspace(context, contacts[jid]) });
+});
+
+// CRM-only cleanup actions. These intentionally do not call Evolution: notes and
+// follow-ups are private CRM metadata, not WhatsApp messages or contact records.
+app.delete('/api/contacts/:jid/followup', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const context = getSessionContext(jid);
+    const contacts = getDb('contacts');
+    context.followUpDate = '';
+    context.followUpAt = '';
+    context.timeline = Array.isArray(context.timeline) ? context.timeline : [];
+    context.timeline.unshift({ id: `activity_${Date.now()}`, type: 'followup_removed', label: 'Follow-up removed', createdAt: new Date().toISOString() });
+    context.timeline = context.timeline.slice(0, 250);
+    if (contacts[jid]) {
+        contacts[jid].followUpDate = '';
+        contacts[jid].followUpAt = '';
+    }
+    saveSessionContext(jid, context);
+    saveDb('contacts', contacts);
+    res.json({ success: true, workspace: serializeContactWorkspace(context, contacts[jid] || {}) });
+});
+
+app.delete('/api/contacts/:jid/notes/:noteId', (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const noteId = decodeURIComponent(req.params.noteId);
+    const context = getSessionContext(jid);
+    const contacts = getDb('contacts');
+    const notes = Array.isArray(context.crmNotes) ? context.crmNotes : (Array.isArray(context.notes) ? context.notes : []);
+    const remaining = notes.filter(note => String(note?.id || '') !== String(noteId));
+    if (remaining.length === notes.length) return res.status(404).json({ success: false, message: 'Private note not found' });
+    context.crmNotes = remaining;
+    context.timeline = Array.isArray(context.timeline) ? context.timeline : [];
+    context.timeline.unshift({ id: `activity_${Date.now()}`, type: 'private_note_removed', label: 'Private note removed', createdAt: new Date().toISOString() });
+    context.timeline = context.timeline.slice(0, 250);
+    saveSessionContext(jid, context);
+    saveDb('contacts', contacts);
+    res.json({ success: true, workspace: serializeContactWorkspace(context, contacts[jid] || {}) });
+});
+
+app.get('/api/contacts/due-today', (req, res) => {
+    const contexts = getDb('session_contexts');
+    const now = new Date(); now.setHours(23, 59, 59, 999);
+    const contacts = getDb('contacts');
+    const due = Object.entries(contexts).filter(([, value]) => value?.followUpDate && new Date(value.followUpDate).getTime() <= now.getTime()).map(([jid, value]) => ({ jid, name: contacts[jid]?.displayNameOverride || contacts[jid]?.name || jid.split('@')[0], ...serializeContactWorkspace(value, contacts[jid] || {}) }));
+    res.json({ success: true, due });
+});
+
+app.get('/api/contacts/follow-ups', (req, res) => {
+    const contexts = getDb('session_contexts');
+    const contacts = getDb('contacts');
+    const now = Date.now();
+    const followUps = Object.entries(contexts).filter(([, value]) => value?.followUpDate).map(([jid, value]) => {
+        const followUpAt = value.followUpDate;
+        const timestamp = new Date(followUpAt).getTime();
+        return { jid, name: contacts[jid]?.displayNameOverride || contacts[jid]?.name || jid.split('@')[0], ...serializeContactWorkspace(value, contacts[jid] || {}), overdue: Number.isFinite(timestamp) && timestamp < now };
+    }).sort((a, b) => new Date(a.followUpAt) - new Date(b.followUpAt));
+    res.json({ success: true, followUps });
+});
+
+app.get('/api/resource-packs', (req, res) => {
+    const stored = getDb('resource_packs');
+    const packs = Array.isArray(stored)
+        ? stored
+        : Object.entries(stored || {}).map(([id, value]) => ({ id, ...(value || {}) }));
+    res.json({ success: true, packs });
+});
+app.post('/api/resource-packs', (req, res) => {
+    const body = req.body || {}; const stored = getDb('resource_packs');
+    let packs = Array.isArray(stored) ? stored : Object.entries(stored || {}).map(([id, value]) => ({ id, ...(value || {}) }));
+    const pack = { id: body.id || `pack_${Date.now()}`, name: String(body.name || 'Untitled pack').trim(), brochure: String(body.brochure || body.brochureLink || ''), brochureLink: String(body.brochureLink || body.brochure || ''), registrationLink: String(body.registrationLink || ''), cfpReminder: String(body.cfpReminder || body.cfpLink || ''), cfpLink: String(body.cfpLink || body.cfpReminder || ''), paymentLink: String(body.paymentLink || ''), brochureMessage: String(body.brochureMessage || ''), registrationMessage: String(body.registrationMessage || ''), drafts: body.drafts && typeof body.drafts === 'object' ? body.drafts : {}, updatedAt: new Date().toISOString() };
+    const index = packs.findIndex(item => item.id === pack.id); if (index >= 0) packs[index] = pack; else packs.unshift(pack);
+    saveDb('resource_packs', packs); res.json({ success: true, pack });
+});
+app.delete('/api/resource-packs/:id', (req, res) => {
+    const stored = getDb('resource_packs');
+    const packs = Array.isArray(stored) ? stored : Object.entries(stored || {}).map(([id, value]) => ({ id, ...(value || {}) }));
+    saveDb('resource_packs', packs.filter(pack => pack.id !== req.params.id)); res.json({ success: true });
+});
+
 
 // ═══════════════════════════════════════════════════════════
 // PHASE 1: CONVERSATION THREADS (Enriched)
@@ -1775,21 +3009,95 @@ app.get('/api/inbox/:jid/thread', (req, res) => {
         saveDb('conversations', threads);
     }
     
+    // Do not make opening a chat (or sending a reply) wait for Evolution's
+    // history endpoint. It can take 5–12 seconds even when the local thread is
+    // already current. Refresh receipts/reactions in the background instead.
+    if (req.query.refresh !== '0') {
+        refreshEvolutionThreadMeta(jid)
+            .then(changed => { if (changed && typeof io !== 'undefined' && io) io.emit('receipts_updated', { jid }); })
+            .catch(() => { /* Existing local copy stays available offline. */ });
+    }
     res.json({ 
         success: true, 
         thread: threads[jid] || [], 
-        context: { ...sessionContext, jid, name: jidMatch ? jidMatch.name : 'Researcher', escalated }
+        context: { ...sessionContext, jid, name: resolveContactIdentity(jid, getDb('contacts'), [jidMatch?.name]), escalated }
     });
 });
 
 // Reply via thread (also logs outgoing message)
+
+// Reply with Poll via Live Inbox
+app.post('/api/inbox/:jid/poll', async (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const { question, name, options, selectableCount, instance } = req.body;
+    const pollQuestion = question || name;
+    if (!pollQuestion || !Array.isArray(options) || options.length < 2) return res.status(400).json({ success: false, message: 'Question and at least two options are required' });
+    
+    // sendSmartMessageCore(remoteJid, instanceName, text, apiKey, buttons = [], skipDelay = false, senderType = 'bot', pollQuestion = '')
+    const result = await sendSmartMessageCore(jid, instance || getDefaultInstanceName(), '', null, options, true, 'agent', pollQuestion);
+    const success = result && result.success === true;
+
+    if (success) {
+        let inboxDb = getDb('inbox');
+        const contacts = getDb('contacts');
+        const existingIdx = inboxDb.findIndex(m => m.jid === jid);
+        const pollMsg = 'You sent a poll: ' + pollQuestion;
+        if (existingIdx !== -1) {
+            inboxDb[existingIdx].message = pollMsg;
+            inboxDb[existingIdx].timestamp = new Date().toISOString();
+        } else {
+            inboxDb.unshift({
+                jid,
+                name: contacts[jid]?.name || jid.split('@')[0],
+                message: pollMsg,
+                timestamp: new Date().toISOString(),
+                sentiment: 'Neutral'
+            });
+        }
+        saveDb('inbox', canonicalizeInboxRows(inboxDb, contacts));
+        res.json({ success: true, message: 'Poll sent' });
+    } else {
+        res.status(500).json({ success: false, message: 'Failed to send poll' });
+    }
+});
+
 app.post('/api/inbox/:jid/reply', async (req, res) => {
     const jid = decodeURIComponent(req.params.jid);
-    const { message, instance } = req.body;
+    // A malformed or headerless request must be rejected cleanly rather than
+    // crashing the route and leaving the CRM composer in a failed state.
+    const { message, instance } = req.body || {};
     if (!message) return res.status(400).json({ success: false, message: 'Message is required' });
+    // A manual reply must be exactly-once from the operator's perspective.
+    // Browsers can retry a request after a slow tunnel response, and two tabs
+    // may be open to the same CRM. Never let either situation create a second
+    // WhatsApp message.
+    const idempotencyKey = String(req.get('X-Idempotency-Key') || '').trim();
+    const replyFingerprint = `${normalizeJid(jid)}|${String(message).trim()}`;
+    const now = Date.now();
+    if (!global.manualReplyDedupe) global.manualReplyDedupe = new Map();
+    for (const [key, value] of global.manualReplyDedupe) {
+        if (now - value.createdAt > 60 * 1000) global.manualReplyDedupe.delete(key);
+    }
+    const dedupeKey = idempotencyKey || replyFingerprint;
+    const existingReply = global.manualReplyDedupe.get(dedupeKey)
+        || global.manualReplyDedupe.get(`fingerprint:${replyFingerprint}`);
+    if (existingReply) {
+        return res.json({ success: true, duplicate: true, messageId: existingReply.messageId || null });
+    }
+    // Reserve the request before calling Evolution, so concurrent duplicate
+    // clicks cannot race each other.
+    const reservation = { createdAt: now, messageId: null };
+    global.manualReplyDedupe.set(dedupeKey, reservation);
+    global.manualReplyDedupe.set(`fingerprint:${replyFingerprint}`, reservation);
     
     // We pass skipDelay = true and senderType = 'agent' so manual replies are sent instantly and logged automatically in sendSmartMessage
-    const success = await sendSmartMessage(jid, instance || getDefaultInstanceName(), message, null, null, true, 'agent');
+    const result = await sendSmartMessageCore(jid, instance || getDefaultInstanceName(), message, null, null, true, 'agent');
+    const success = result.success === true;
+    reservation.messageId = result.messageId || null;
+    if (!success) {
+        global.manualReplyDedupe.delete(dedupeKey);
+        global.manualReplyDedupe.delete(`fingerprint:${replyFingerprint}`);
+    }
 
     // Update inbox so outbound messages appear in the chat list sidebar
     if (success) {
@@ -1808,13 +3116,85 @@ app.post('/api/inbox/:jid/reply', async (req, res) => {
                 sentiment: 'Neutral'
             });
         }
-        saveDb('inbox', inboxDb);
+        saveDb('inbox', canonicalizeInboxRows(inboxDb, contacts));
     }
 
-    res.json({ success });
+    res.json({ success, messageId: result.messageId || null, reason: result.reason || null });
 });
 
 // Send media via thread (handles base64 data URIs and saves file locally)
+
+// --- Send Voice Note ---
+app.post('/api/chat/send-audio', async (req, res) => {
+    try {
+        const { jid, base64 } = req.body;
+        if (!jid || !base64) return res.status(400).json({ success: false, message: 'Missing jid or base64 audio data' });
+
+        console.log(`[PTT] Sending voice note to ${jid}`);
+        const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
+        const EVO_API_KEY = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+        
+        // Strip any data URI prefix if present (e.g. data:audio/mp3;base64, or data:audio/webm;codecs=opus;base64,)
+        const b64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+        const evoPayload = {
+            number: jid.split('@')[0],
+            options: {
+                delay: 1200,
+                presence: 'recording',
+                encoding: true
+            },
+            audioMessage: {
+                audio: b64Data
+            },
+            audio: b64Data // pure base64 without prefix
+        };
+
+        const evoRes = await axios.post(
+            `${EVO_API_URL}/message/sendWhatsAppAudio/ScholarVault`,
+            evoPayload,
+            { headers: { 'apikey': EVO_API_KEY, 'Content-Type': 'application/json' } }
+        );
+
+        if (evoRes.data && evoRes.data.key) {
+            // Save to conversations
+            let convos = getDb('conversations');
+            if (!convos[jid]) convos[jid] = [];
+            convos[jid].push({
+                id: evoRes.data.key.id,
+                messageId: evoRes.data.key.id,
+                direction: 'out',
+                text: '🎤 Voice Note',
+                mediaType: 'audio',
+                mediaUrl: base64,
+                timestamp: new Date().toISOString(),
+                status: 'PENDING',
+                senderType: 'agent'
+            });
+            saveDb('conversations', convos);
+
+            // Update inbox
+            let inbox = getDb('inbox');
+            const inboxIdx = inbox.findIndex(m => m.jid === jid);
+            if (inboxIdx !== -1) {
+                inbox[inboxIdx].message = '🎤 Voice Note';
+                inbox[inboxIdx].timestamp = new Date().toISOString();
+                const item = inbox.splice(inboxIdx, 1)[0];
+                inbox.unshift(item);
+                saveDb('inbox', inbox);
+            }
+
+            res.json({ success: true, messageId: evoRes.data.key.id });
+        } else {
+            console.error('[PTT] Evolution API Error:', evoRes.data);
+            res.status(500).json({ success: false, message: 'Failed to send voice note via Evolution API' });
+        }
+    } catch (e) {
+        console.error('[PTT Error]', e.response ? e.response.data : e.message);
+        res.status(500).json({ success: false, message: e.response ? JSON.stringify(e.response.data) : e.message });
+    }
+});
+
 app.post('/api/inbox/:jid/media', async (req, res) => {
     const jid = decodeURIComponent(req.params.jid);
     const { media, mediatype, fileName, caption, instance } = req.body;
@@ -1861,11 +3241,14 @@ app.post('/api/inbox/:jid/media', async (req, res) => {
         }, { headers: { 'apikey': key } });
         
         apiSuccess = !!evoResponse.data;
+        const msgId = evoResponse?.data?.key?.id || evoResponse?.data?.message?.key?.id || null;
         
         if (apiSuccess) {
             let threads = getDb('conversations');
             if (!threads[jid]) threads[jid] = [];
             threads[jid].push({
+                id: msgId,
+                fromMe: true,
                 direction: 'out',
                 text: caption || `Sent ${mediatype}: ${fileName || cleanFileName}`,
                 mediaUrl: relativeUrl,
@@ -1892,6 +3275,74 @@ app.post('/api/inbox/:jid/media', async (req, res) => {
     }
 });
 
+// Send manual emoji reaction via Evolution API (R1: Milestone 1)
+app.post('/message/sendReaction/:instance', async (req, res) => {
+    try {
+        const instanceName = req.params.instance || getDefaultInstanceName();
+        let { jid, messageId, reaction, fromMe } = req.body;
+
+        // Support nested payload structure (reactionMessage) or flat structure
+        if (req.body && req.body.reactionMessage && req.body.reactionMessage.key) {
+            jid = req.body.reactionMessage.key.remoteJid;
+            messageId = req.body.reactionMessage.key.id;
+            fromMe = req.body.reactionMessage.key.fromMe;
+            reaction = req.body.reactionMessage.reaction;
+        }
+
+        if (!jid || !messageId || reaction === undefined) {
+            return res.status(400).json({ success: false, message: 'jid, messageId, and reaction parameters are required.' });
+        }
+
+        const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+        const key = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+
+        console.log(`[Reaction API] Dispatching reaction "${reaction}" for message ID ${messageId} to ${jid} via ${instanceName}...`);
+
+        let evoResponse = null;
+        try {
+            evoResponse = await axios.post(
+                `${EVO_API_URL}/message/sendReaction/${instanceName}`,
+                {
+                    reactionMessage: {
+                        key: {
+                            remoteJid: jid,
+                            fromMe: fromMe ?? true,
+                            id: messageId
+                        },
+                        reaction: reaction
+                    }
+                },
+                { headers: { 'apikey': key, 'Content-Type': 'application/json' } }
+            );
+        } catch (evoErr) {
+            console.warn('[Reaction API] Evolution API request warning:', evoErr.response?.data || evoErr.message);
+        }
+
+        // Update local data persistence store (conversations.json)
+        let threads = getDb('conversations');
+        if (threads[jid]) {
+            const msgIndex = threads[jid].findIndex(m => m.id === messageId || m.messageId === messageId);
+            if (msgIndex !== -1) {
+                if (reaction) {
+                    threads[jid][msgIndex].reaction = reaction;
+                } else {
+                    delete threads[jid][msgIndex].reaction;
+                }
+                saveDb('conversations', threads);
+            }
+        }
+
+        if (typeof io !== 'undefined' && io) {
+            io.emit('messages_update');
+        }
+
+        res.json({ success: true, data: evoResponse?.data || { status: 'OK' } });
+    } catch (err) {
+        console.error('[Reaction API Error]', err.response?.data || err.message);
+        res.status(500).json({ success: false, error: err.response?.data || err.message });
+    }
+});
+
 // Toggle escalation/handoff state manually
 app.post('/api/inbox/:jid/escalate', (req, res) => {
     const jid = decodeURIComponent(req.params.jid);
@@ -1905,6 +3356,10 @@ app.post('/api/inbox/:jid/escalate', (req, res) => {
         const currentSession = getSessionContext(jid);
         currentSession.escalated = escalated === true;
         currentSession.lastIntent = escalated ? 'manual_takeover' : 'manual_resolve';
+        if (!escalated) {
+            currentSession.aiEnabledAt = new Date().toISOString();
+            delete currentSession.manualHoldUntil;
+        }
         saveSessionContext(jid, currentSession);
         
         // Also update standard inbox DB
@@ -1918,7 +3373,7 @@ app.post('/api/inbox/:jid/escalate', (req, res) => {
         }
         
         console.log(`[Manual Escalation] Toggle set to ${escalated} for ${jid}`);
-        res.json({ success: true, session: currentSession });
+        res.json({ success: true, session: currentSession, globalAiPaused, message: !escalated && globalAiPaused ? 'Chat AI is ready, but Global AI is paused so no automated message can be sent.' : undefined });
     } catch (err) {
         console.error('[Inbox Escalation API] Error:', err.message);
         res.status(500).json({ success: false, error: err.message });
@@ -2069,9 +3524,10 @@ app.get('/api/analytics/send-time', (req, res) => {
 // PHASE 2: LEAD STATUS PIPELINE
 // ═══════════════════════════════════════════════════════════
 app.get('/api/pipeline', (req, res) => {
-    const contacts = getDb('contacts');
+    const contacts = getDb('contacts') || {};
     const pipeline = { New: [], Messaged: [], Replied: [], Interested: [], Registered: [], Attended: [] };
-    Object.values(contacts).forEach(c => {
+    Object.entries(contacts).forEach(([jid, value]) => {
+        const c = { jid, ...(value || {}) };
         const status = c.leadStatus || 'New';
         if (pipeline[status]) pipeline[status].push(c);
         else pipeline['New'].push(c);
@@ -2080,7 +3536,7 @@ app.get('/api/pipeline', (req, res) => {
 });
 app.post('/api/contacts/:jid/status', (req, res) => {
     const jid = decodeURIComponent(req.params.jid);
-    const { status } = req.body;
+    const { status } = req.body || {};
     const valid = ['New','Messaged','Replied','Interested','Registered','Attended'];
     if (!valid.includes(status)) return res.status(400).json({ success: false, message: 'Invalid status' });
     let contacts = getDb('contacts');
@@ -2091,9 +3547,10 @@ app.post('/api/contacts/:jid/status', (req, res) => {
     res.json({ success: true });
 });
 app.get('/api/pipeline/csv', (req, res) => {
-    const contacts = getDb('contacts');
+    const contacts = getDb('contacts') || {};
     let csv = 'Name,Phone,Status,Tags,Updated\n';
-    Object.values(contacts).forEach(c => {
+    Object.entries(contacts).forEach(([jid, value]) => {
+        const c = { jid, ...(value || {}) };
         const phone = c.jid ? c.jid.split('@')[0] : c.phone || '';
         csv += `"${c.name||''}","${phone}","${c.leadStatus||'New'}","${(c.tags||[]).join(';')}","${c.statusUpdatedAt||''}"\n`;
     });
@@ -2164,19 +3621,24 @@ app.get('/api/instances', async (req, res) => {
     const withStatus = await Promise.all(instances.map(async inst => {
         try {
             const r = await axios.get(`${inst.apiUrl}/instance/connectionState/${inst.name}`, { headers: { 'apikey': inst.apiKey }, timeout: 3000 });
-            return { ...inst, status: r.data?.instance?.state || 'unknown' };
+            return { name: inst.name, apiUrl: inst.apiUrl, addedAt: inst.addedAt, isDefault: Boolean(inst.isDefault), keyConfigured: Boolean(inst.apiKey), status: r.data?.instance?.state || 'unknown' };
         } catch (err) { 
-            return { ...inst, status: 'offline' }; 
+            return { name: inst.name, apiUrl: inst.apiUrl, addedAt: inst.addedAt, isDefault: Boolean(inst.isDefault), keyConfigured: Boolean(inst.apiKey), status: 'offline' }; 
         }
     }));
     res.json({ success: true, instances: withStatus });
 });
 app.post('/api/instances', (req, res) => {
-    const { name, apiUrl, apiKey } = req.body;
-    if (!name || !apiUrl || !apiKey) return res.status(400).json({ success: false, message: 'name, apiUrl, apiKey required' });
+    const { name, apiUrl, apiKey } = req.body || {};
+    if (!name || !apiUrl) return res.status(400).json({ success: false, message: 'Instance name and API URL are required.' });
     let instances = getDb('instances');
     if (!Array.isArray(instances)) instances = [];
-    if (!instances.find(i => i.name === name)) instances.push({ name, apiUrl, apiKey, addedAt: new Date().toISOString() });
+    const index = instances.findIndex(i => i.name === name);
+    if (index >= 0) instances[index] = { ...instances[index], name, apiUrl, apiKey: apiKey || instances[index].apiKey };
+    else {
+        if (!apiKey) return res.status(400).json({ success: false, message: 'API key is required for a new instance.' });
+        instances.push({ name, apiUrl, apiKey, addedAt: new Date().toISOString(), isDefault: instances.length === 0 });
+    }
     saveDb('instances', instances);
     res.json({ success: true });
 });
@@ -2192,6 +3654,7 @@ app.delete('/api/instances/:name', (req, res) => {
 // PHASE 4: LISTMONK INTEGRATION
 // ═══════════════════════════════════════════════════════════
 
+if (false) { // Retired Listmonk integration; preserved only as local source history.
 app.get('/api/settings/listmonk', (req, res) => {
     const s = getDb('settings_listmonk');
     res.json({ success: true, settings: s || { url: 'https://listmonk.scholarvault.in', username: 'Sam' } });
@@ -2377,6 +3840,65 @@ app.post('/api/unified-campaign', async (req, res) => {
 });
 
 // ─── Initialize SendPulse Bulk Engine ───
+}
+setupEmailEngine(app, getDb, saveDb);
+
+// Local-only multi-channel journeys. These are explicitly launched campaigns:
+// email is sent first, then WhatsApp is attempted only for contacts that have
+// not sent a WhatsApp reply after the email stage. No public webhook is needed.
+let multiChannelWorkerBusy = false;
+async function processMultiChannelJourneys() {
+    if (multiChannelWorkerBusy) return;
+    multiChannelWorkerBusy = true;
+    try {
+        const journeys = getDb('multichannel_campaigns') || {};
+        const emailCampaigns = getDb('email_campaigns') || {};
+        const conversations = getDb('conversations') || {};
+        const instanceName = getDefaultInstanceName();
+        const apiKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        let changed = false;
+        for (const journey of Object.values(journeys)) {
+            if (!journey || ['cancelled', 'completed'].includes(journey.status)) continue;
+            const emailCampaign = emailCampaigns[journey.emailCampaignId];
+            if (!emailCampaign || !['completed', 'cancelled'].includes(emailCampaign.status)) continue;
+            if (emailCampaign.status === 'cancelled') { journey.status = 'cancelled'; changed = true; continue; }
+            const emailStageAt = journey.emailStageAt || emailCampaign.completedAt || emailCampaign.createdAt;
+            journey.emailStageAt = emailStageAt;
+            const dueAt = new Date(emailStageAt).getTime() + Math.max(0, Number(journey.delayHours || 24)) * 3600000;
+            if (Date.now() < dueAt) { journey.status = 'waiting_for_reply'; changed = true; continue; }
+            const completed = new Set(journey.completedJids || []);
+            const skipped = new Set(journey.skippedJids || []);
+            for (const recipient of journey.contacts || []) {
+                const jid = recipient.jid || (String(recipient.phone || '').replace(/\D/g, '') + '@s.whatsapp.net');
+                if (!jid || completed.has(jid) || skipped.has(jid)) continue;
+                const thread = Array.isArray(conversations[jid]) ? conversations[jid] : [];
+                const replied = thread.some(message => !message.fromMe && new Date(message.timestamp || message.createdAt || 0).getTime() >= new Date(emailStageAt).getTime());
+                if (replied) { skipped.add(jid); continue; }
+                const text = String(journey.whatsappMessage || '').replace(/{{name}}/gi, recipient.name || 'there');
+                if (!text.trim()) { skipped.add(jid); continue; }
+                const result = await sendSmartMessageCore(jid, instanceName, text, apiKey, [], true, 'campaign');
+                if (result?.success) completed.add(jid);
+            }
+            journey.completedJids = [...completed];
+            journey.skippedJids = [...skipped];
+            journey.status = completed.size + skipped.size >= (journey.contacts || []).length ? 'completed' : 'sending_whatsapp_followup';
+            journey.updatedAt = new Date().toISOString();
+            changed = true;
+        }
+        if (changed) saveDb('multichannel_campaigns', journeys);
+    } catch (error) {
+        console.error('[Multi-channel] Journey worker failed:', error.message);
+    } finally { multiChannelWorkerBusy = false; }
+}
+setInterval(processMultiChannelJourneys, 60000);
+app.post('/api/multichannel/campaigns/:id/cancel', (req, res) => {
+    const journeys = getDb('multichannel_campaigns') || {};
+    const journey = journeys[req.params.id];
+    if (!journey) return res.status(404).json({ success: false, message: 'Journey not found.' });
+    journey.status = 'cancelled'; journey.cancelledAt = new Date().toISOString();
+    saveDb('multichannel_campaigns', journeys);
+    res.json({ success: true, journey });
+});
 setupSendPulse(app, getDb, saveDb);
 
 async function autoStartEvolution() {
@@ -2388,14 +3910,16 @@ async function autoStartEvolution() {
     
     try {
         // Check if Evolution API is already active
+        const axios = require('axios');
         await axios.get((process.env.EVO_API_URL || 'http://localhost:8080'), { timeout: 2000 });
         console.log('[Auto-Start] Evolution API is already running on port 8080.');
     } catch (e) {
         // Port 8080 is offline, spawn a new instance
         try {
+            const { spawn } = require('child_process');
             const evoPath = 'C:\\Users\\Shyam\\evolution-api';
             console.log(`[Auto-Start] Evolution API not active. Spawning at ${evoPath}...`);
-            evolutionProcess = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', 'npm run start'], { cwd: evoPath, detached: true, windowsHide: false });
+            let evolutionProcess = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', 'npm run start'], { cwd: evoPath, detached: true, windowsHide: false });
             evolutionProcess.unref();
             console.log(`[Auto-Start] Evolution API launched successfully.`);
         } catch (spawnErr) {
@@ -2404,13 +3928,407 @@ async function autoStartEvolution() {
     }
 }
 
-app.listen(PORT, () => {
+async function fetchContactProfilePicture(jid) {
+    try {
+        const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
+        const instName = getDefaultInstanceName();
+        const key = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+
+        const number = String(jid || '').split('@')[0].replace(/\D/g, '');
+        const res = await axios.post(`${EVO_API_URL}/chat/fetchProfilePictureUrl/${instName}`, {
+            number
+        }, {
+            headers: { 'apikey': key }
+        });
+
+        const profilePictureUrl = res.data?.profilePictureUrl || res.data?.data?.profilePictureUrl;
+        if (profilePictureUrl) {
+            let contacts = getDb('contacts');
+            if (!contacts[jid]) contacts[jid] = { jid: jid };
+            contacts[jid].profilePictureUrl = profilePictureUrl;
+            saveDb('contacts', contacts);
+            return profilePictureUrl;
+        }
+    } catch (e) {
+        // Ignored
+    }
+    return null;
+}
+
+app.get('/api/contacts/:jid/profile-picture', async (req, res) => {
+    const jid = decodeURIComponent(req.params.jid);
+    const url = await fetchContactProfilePicture(jid);
+    res.json({ success: Boolean(url), profilePictureUrl: url || null });
+});
+
+function extractEvolutionHistoryMessage(record) {
+    const payload = record?.message?.message || record?.message;
+    if (!payload || typeof payload !== 'object') return null;
+    const key = record.key || payload.key || {};
+    let text = '';
+    let mediaType = null;
+    let fileName = null;
+    let base64 = null;
+    if (payload.conversation) text = payload.conversation;
+    else if (payload.extendedTextMessage?.text) text = payload.extendedTextMessage.text;
+    else if (payload.imageMessage) { text = payload.imageMessage.caption || '[Image]'; mediaType = 'image'; base64 = payload.imageMessage.base64 || null; }
+    else if (payload.videoMessage) { text = payload.videoMessage.caption || '[Video]'; mediaType = 'video'; base64 = payload.videoMessage.base64 || null; }
+    else if (payload.audioMessage) { text = '[Voice note]'; mediaType = 'audio'; base64 = payload.audioMessage.base64 || null; }
+    else if (payload.documentMessage) { text = payload.documentMessage.caption || `[Document: ${payload.documentMessage.fileName || payload.documentMessage.title || 'file'}]`; mediaType = 'document'; fileName = payload.documentMessage.fileName || payload.documentMessage.title || 'document'; base64 = payload.documentMessage.base64 || null; }
+    if (!text && !mediaType) return null;
+    return { key, text, mediaType, fileName, base64 };
+}
+
+async function importEvolutionHistoryForJid(jid, instanceName, apiKey, limit = 100) {
+    const canonicalJid = resolveCanonicalJid(jid);
+    const targetJids = new Set([canonicalJid, jid]);
+    getLidsForPhone(canonicalJid).forEach(l => targetJids.add(l));
+    const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+    
+    let imported = 0;
+    let unavailable = 0;
+    let recordsCount = 0;
+
+    for (const queryJid of targetJids) {
+        try {
+            const response = await axios.post(`${EVO_API_URL}/chat/findMessages/${instanceName}`, {
+                where: { key: { remoteJid: queryJid } }, page: 1, limit: Math.min(Math.max(Number(limit) || 100, 1), 250)
+            }, { headers: { apikey: apiKey }, timeout: 30000 });
+            const messageSet = response.data?.messages || response.data || {};
+            const records = Array.isArray(messageSet.records) ? messageSet.records : (Array.isArray(messageSet) ? messageSet : []);
+            recordsCount += records.length;
+            
+            for (const record of records) {
+                if (record.key?.remoteJidAlt && queryJid.includes('@lid')) {
+                    recordLidMapping(queryJid, record.key.remoteJidAlt);
+                }
+                const parsed = extractEvolutionHistoryMessage(record);
+                if (!parsed) { unavailable++; continue; }
+                const sourceTimestamp = isoFromWhatsAppTimestamp(record.messageTimestamp || parsed.key?.messageTimestamp) || new Date().toISOString();
+                let mediaUrl = null;
+                let base64 = parsed.base64;
+                if (parsed.mediaType && !base64 && parsed.key?.id) {
+                    try {
+                        const mediaResponse = await axios.post(`${EVO_API_URL}/chat/getBase64FromMediaMessage/${instanceName}`, { message: { key: parsed.key } }, { headers: { apikey: apiKey }, timeout: 15000 });
+                        base64 = mediaResponse.data?.base64 || null;
+                    } catch (_) { /* Keep the message even if Evolution no longer has the media blob. */ }
+                }
+                if (base64) {
+                    try {
+                        const uploadsDir = path.join(__dirname, 'uploads');
+                        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+                        const extension = parsed.mediaType === 'image' ? '.png' : parsed.mediaType === 'video' ? '.mp4' : parsed.mediaType === 'audio' ? '.ogg' : '';
+                        const cleanName = (parsed.fileName || `history-${parsed.key?.id || Date.now()}${extension}`).replace(/[^a-zA-Z0-9._-]/g, '_');
+                        const target = `${Date.now()}-${cleanName}`;
+                        fs.writeFileSync(path.join(uploadsDir, target), Buffer.from(String(base64).replace(/^data:[^,]+,/, ''), 'base64'));
+                        mediaUrl = `/uploads/${target}`;
+                    } catch (_) { /* Thread text still remains available if local media caching fails. */ }
+                }
+                upsertThreadMessage(canonicalJid, {
+                    id: parsed.key?.id || record.id,
+                    messageId: parsed.key?.id || record.id,
+                    fromMe: Boolean(parsed.key?.fromMe),
+                    direction: parsed.key?.fromMe ? 'out' : 'in',
+                    text: parsed.text,
+                    messageType: parsed.mediaType || record.messageType || 'text',
+                    mediaType: parsed.mediaType,
+                    mediaUrl,
+                    fileName: parsed.fileName,
+                    name: parsed.key?.fromMe ? 'Me' : resolveContactIdentity(canonicalJid, getDb('contacts'), [record.pushName]),
+                    status: strongestEvolutionReceipt(record.MessageUpdate || record.messageUpdate || record.update?.status || record.status || []),
+                    timestamp: sourceTimestamp
+                });
+                imported++;
+            }
+        } catch (err) {
+            console.warn(`[History Sync] Error querying ${queryJid}:`, err.message);
+        }
+    }
+    return { records: recordsCount, imported, unavailable };
+}
+
+// Refresh only receipt/reaction metadata when an operator opens a thread.
+// Evolution's MessageUpdate history is not chronological, so keep the highest
+// observed state; a later SERVER_ACK must never overwrite READ.
+async function refreshEvolutionThreadMeta(jid) {
+    const instanceName = getDefaultInstanceName();
+    const apiKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+    const EVO_API_URL = process.env.EVO_API_URL || 'http://localhost:8080';
+    const canonicalJid = resolveCanonicalJid(jid);
+    const targetJids = new Set([canonicalJid, jid]);
+    getLidsForPhone(canonicalJid).forEach(l => targetJids.add(l));
+    
+    const threads = getDb('conversations');
+    const thread = threads[canonicalJid] || [];
+    let changed = false;
+
+    for (const targetJid of targetJids) {
+        try {
+            const response = await axios.post(`${EVO_API_URL}/chat/findMessages/${instanceName}`, { where: { key: { remoteJid: targetJid } }, page: 1, limit: 100 }, { headers: { apikey: apiKey }, timeout: 12000 });
+            const messageSet = response.data?.messages || response.data || {};
+            const records = Array.isArray(messageSet.records) ? messageSet.records : (Array.isArray(messageSet) ? messageSet : []);
+            
+            for (const record of records) {
+                if (record.key?.remoteJidAlt && targetJid.includes('@lid')) {
+                    recordLidMapping(targetJid, record.key.remoteJidAlt);
+                }
+                const payload = record.message || record.messages || {};
+                const reaction = extractReactionMessage(record) || extractReactionMessage(payload);
+                if (reaction?.key?.id) {
+                    if (applyReactionToConversation(threads, reaction, canonicalJid)) changed = true;
+                    continue;
+                }
+                const messageId = record.key?.id || record.message?.key?.id || record.id;
+                const target = thread.find(item => (item.id || item.messageId) === messageId);
+                if (target) {
+                    const received = strongestEvolutionReceipt(
+                        record.MessageUpdate || record.messageUpdate || record.update?.status || record.status || record.message?.status || []
+                    );
+                    const current = normalizeEvolutionReceipt(target.status);
+                    if (RECEIPT_RANK[received] > RECEIPT_RANK[current]) { target.status = received; changed = true; }
+                } else {
+                    const parsed = extractEvolutionHistoryMessage(record);
+                    if (parsed) {
+                        const sourceTimestamp = isoFromWhatsAppTimestamp(record.messageTimestamp || parsed.key?.messageTimestamp) || new Date().toISOString();
+                        thread.push({
+                            id: messageId,
+                            messageId: messageId,
+                            fromMe: Boolean(parsed.key?.fromMe),
+                            direction: parsed.key?.fromMe ? 'out' : 'in',
+                            text: parsed.text,
+                            messageType: parsed.mediaType || record.messageType || 'text',
+                            mediaType: parsed.mediaType,
+                            mediaUrl: null,
+                            fileName: parsed.fileName,
+                            name: parsed.key?.fromMe ? 'Me' : resolveContactIdentity(canonicalJid, getDb('contacts'), [record.pushName]),
+                            status: strongestEvolutionReceipt(record.MessageUpdate || record.messageUpdate || record.update?.status || record.status || []),
+                            timestamp: sourceTimestamp
+                        });
+                        changed = true;
+                    }
+                }
+            }
+        } catch (_) {}
+    }
+    
+    if (changed) {
+        thread.sort((a, b) => (new Date(a.timestamp || 0).getTime() || 0) - (new Date(b.timestamp || 0).getTime() || 0));
+        threads[canonicalJid] = thread;
+        saveDb('conversations', threads);
+        
+        // Update inbox snippet so sidebar stays in sync
+        const lastMsg = thread[thread.length - 1];
+        if (lastMsg) {
+            let inbox = getDb('inbox');
+            const inIdx = inbox.findIndex(m => m.jid === canonicalJid);
+            if (inIdx >= 0) {
+                inbox[inIdx].message = lastMsg.text || (lastMsg.mediaType ? `[${lastMsg.mediaType}]` : inbox[inIdx].message);
+                inbox[inIdx].lastMessageAt = lastMsg.timestamp;
+                inbox[inIdx].timestamp = lastMsg.timestamp;
+                saveDb('inbox', canonicalizeInboxRows(inbox));
+            }
+        }
+    }
+    return changed;
+}
+
+app.post('/api/inbox/history-sync', async (req, res) => {
+    try {
+        const instanceName = getDefaultInstanceName();
+        const apiKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        const requested = Array.isArray(req.body?.jids) ? req.body.jids : [];
+        const jids = (requested.length ? requested : canonicalizeInboxRows(getDb('inbox')).map(item => item.jid))
+            .map(normalizeJid).filter(Boolean).filter(jid => !jid.includes('@g.us')).slice(0, 100);
+        let records = 0, imported = 0, unavailable = 0;
+        for (const jid of jids) {
+            const result = await importEvolutionHistoryForJid(jid, instanceName, apiKey, req.body?.limit || 100);
+            records += result.records; imported += result.imported; unavailable += result.unavailable;
+        }
+        res.json({ success: true, chats: jids.length, records, imported, unavailable, message: unavailable ? 'Some Evolution records have no stored payload, so their original text/media cannot be recovered from this instance.' : 'Stored WhatsApp history imported.' });
+    } catch (error) {
+        res.status(502).json({ success: false, message: error.response?.data?.message || error.message || 'WhatsApp history sync failed' });
+    }
+});
+
+async function syncOfflineMessages() {
+    try {
+        console.log('[Offline Sync] Starting sync process for missed messages...');
+        const axios = require('axios');
+        const EVO_API_URL = (process.env.EVO_API_URL || 'http://localhost:8080');
+        const instName = getDefaultInstanceName();
+        const key = (process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!');
+        
+        let inbox = getDb('inbox');
+        let contacts = getDb('contacts');
+        
+        // Ensure Evolution API is up before syncing
+        await axios.get(`${EVO_API_URL}`, { timeout: 3000 });
+        
+        // Fetch all recent chats from phone
+        const chatsRes = await axios.post(`${EVO_API_URL}/chat/findChats/${instName}`, {}, { headers: { 'apikey': key } });
+        const chats = chatsRes.data || [];
+        
+        let syncCount = 0;
+        let contactsModified = false;
+        
+        for (const chat of chats) {
+            const rawJid = normalizeJid(chat.remoteJid);
+            if (!rawJid || rawJid.includes('@g.us') || rawJid === 'status@broadcast') continue;
+            
+            // Check for LID mapping from chat's last message or resolve from known mappings
+            const altJid = chat.lastMessage?.key?.remoteJidAlt;
+            if (rawJid.includes('@lid') && altJid && altJid.includes('@s.whatsapp.net')) {
+                recordLidMapping(rawJid, altJid);
+            } else if (rawJid.includes('@lid') && !resolveCanonicalJid(rawJid).includes('@s.whatsapp.net')) {
+                // Try quick lookup of recent messages to uncover remoteJidAlt
+                try {
+                    const msgCheck = await axios.post(`${EVO_API_URL}/chat/findMessages/${instName}`, {
+                        where: { key: { remoteJid: rawJid } }, limit: 5
+                    }, { headers: { apikey: key }, timeout: 4000 });
+                    const records = msgCheck.data?.messages?.records || msgCheck.data?.records || msgCheck.data || [];
+                    for (const r of records) {
+                        if (r.key?.remoteJidAlt && r.key.remoteJidAlt.includes('@s.whatsapp.net')) {
+                            recordLidMapping(rawJid, r.key.remoteJidAlt);
+                            break;
+                        }
+                    }
+                } catch (_) {}
+            }
+            
+            const jid = resolveCanonicalJid(rawJid, altJid);
+            
+            // Extract best name
+            let name = chat.pushName || jid.split('@')[0];
+            if (chat.lastMessage && chat.lastMessage.pushName && chat.lastMessage.pushName !== 'Você') {
+                name = chat.lastMessage.pushName;
+            }
+            name = resolveContactIdentity(jid, contacts, [chat.lastMessage?.pushName, chat.pushName, name]);
+            
+            // Ensure we have profile picture
+            if (!contacts[jid]) {
+                contacts[jid] = { jid: jid };
+                contactsModified = true;
+            }
+            if (chat.profilePicUrl && contacts[jid].profilePictureUrl !== chat.profilePicUrl) {
+                contacts[jid].profilePictureUrl = chat.profilePicUrl;
+                contactsModified = true;
+            } else if (!contacts[jid].profilePictureUrl) {
+                const picUrl = await fetchContactProfilePicture(jid);
+                if (picUrl) {
+                    contacts[jid].profilePictureUrl = picUrl;
+                    contactsModified = true;
+                }
+            }
+            
+            // Reconcile both new and existing chats
+            const inInbox = inbox.find(m => m.jid === jid);
+            if (chat.lastMessage) {
+                let text = 'Media/System Message';
+                let mediatype = null;
+                if (chat.lastMessage.message) {
+                    const msgObj = chat.lastMessage.message;
+                    if (msgObj.conversation) text = msgObj.conversation;
+                    else if (msgObj.extendedTextMessage) text = msgObj.extendedTextMessage.text;
+                    else if (msgObj.imageMessage) { text = '📷 Image: ' + (msgObj.imageMessage.caption || ''); mediatype = 'image'; }
+                    else if (msgObj.videoMessage) { text = '🎥 Video: ' + (msgObj.videoMessage.caption || ''); mediatype = 'video'; }
+                    else if (msgObj.audioMessage) { text = '🎤 Voice/Audio Message'; mediatype = 'audio'; }
+                    else if (msgObj.documentMessage) { text = '📄 Document: ' + (msgObj.documentMessage.fileName || ''); mediatype = 'document'; }
+                }
+                
+                const timestamp = isoFromWhatsAppTimestamp(chat.lastMessage.messageTimestamp) || chat.updatedAt || new Date().toISOString();
+                const oldTime = new Date(inInbox?.lastMessageAt || inInbox?.timestamp || 0).getTime() || 0;
+                const newTime = new Date(timestamp).getTime() || 0;
+                
+                // Backfill the message into conversations thread
+                const msgId = chat.lastMessage.key?.id || chat.lastMessage.id;
+                if (msgId) {
+                    upsertThreadMessage(jid, {
+                        id: msgId,
+                        messageId: msgId,
+                        fromMe: Boolean(chat.lastMessage.key?.fromMe),
+                        direction: chat.lastMessage.key?.fromMe ? 'out' : 'in',
+                        text: text,
+                        messageType: mediatype || 'text',
+                        mediaType: mediatype,
+                        name: chat.lastMessage.key?.fromMe ? 'Me' : name,
+                        status: strongestEvolutionReceipt(chat.lastMessage.MessageUpdate || chat.lastMessage.update?.status || chat.lastMessage.status || []),
+                        timestamp
+                    });
+                }
+                
+                if (!inInbox || newTime >= oldTime) {
+                    inbox = inbox.filter(m => m.jid !== jid);
+                    inbox.push({
+                        jid: jid,
+                        name: name,
+                        message: text,
+                        sentiment: 'Neutral',
+                        timestamp,
+                        lastMessageAt: timestamp
+                    });
+                    syncCount++;
+                }
+            }
+        }
+        
+        if (contactsModified) saveDb('contacts', contacts);
+        
+        if (syncCount > 0) {
+            saveDb('inbox', canonicalizeInboxRows(inbox, contacts));
+            if (typeof io !== 'undefined' && io) io.emit('sync_complete', { count: syncCount });
+        }
+        console.log(`[Offline Sync] Complete! Backfilled ${syncCount} chats.`);
+        return { success: true, synced: syncCount };
+    } catch (e) {
+        console.error('[Offline Sync] Failed to sync messages:', e.message);
+        return { success: false, message: e.message };
+    }
+}
+
+io.on('connection', (socket) => {
+    console.log('[WebSocket] Client connected:', socket.id);
+    socket.on('disconnect', () => {
+        console.log('[WebSocket] Client disconnected:', socket.id);
+    });
+});
+
+// Keep the receipt webhook enabled without replacing the user's URL or the
+// already-working inbound events. Delivery/read ticks cannot update if
+// Evolution is not subscribed to MESSAGES_UPDATE.
+async function ensureEvolutionReceiptWebhook() {
+    try {
+        const instanceName = getDefaultInstanceName();
+        const apiUrl = process.env.EVO_API_URL || 'http://localhost:8080';
+        const apiKey = process.env.EVO_API_KEY || 'SV-EvoApi-2026-ScholarVault!';
+        const headers = { apikey: apiKey };
+        const current = await axios.get(`${apiUrl}/webhook/find/${instanceName}`, { headers, timeout: 5000 });
+        const webhook = current.data || {};
+        const events = [...new Set([...(Array.isArray(webhook.events) ? webhook.events : []), 'MESSAGES_UPDATE'])];
+        if (events.length === (webhook.events || []).length) return;
+        await axios.post(`${apiUrl}/webhook/set/${instanceName}`, { webhook: {
+            url: webhook.url || `http://localhost:${PORT}/webhook`,
+            enabled: webhook.enabled !== false,
+            events,
+            webhookByEvents: webhook.webhookByEvents === true,
+            webhookBase64: webhook.webhookBase64 !== false
+        } }, { headers, timeout: 5000 });
+        console.log('[Webhook] Enabled MESSAGES_UPDATE for sent/delivered/read receipts.');
+    } catch (error) {
+        console.warn('[Webhook] Could not verify receipt events:', error.response?.data?.message || error.message);
+    }
+}
+
+server.listen(PORT, () => {
     console.log(`=========================================`);
     console.log(`🚀 ScholarVault Campaign Command Center`);
     console.log(`=========================================`);
     console.log(`Dashboard available at: http://localhost:${PORT}`);
     console.log(`Webhook listener ACTIVE on port ${PORT}`);
+    setTimeout(ensureEvolutionReceiptWebhook, 1200);
     
-    // Auto-start Evolution API if not already running
-    setTimeout(autoStartEvolution, 3000);
+    // Wait for Evolution API and then sync offline messages
+    setTimeout(() => {
+        autoStartEvolution();
+        setTimeout(syncOfflineMessages, 5000);
+    }, 3000);
 });

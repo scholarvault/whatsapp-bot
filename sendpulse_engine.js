@@ -20,6 +20,9 @@ module.exports = function setupSendPulse(app, getDb, saveDb) {
     // ─── Token Cache ───
     let SP_TOKEN = null;
     let SP_TOKEN_EXPIRES = 0;
+    // Only one queue worker may process batches at a time. This prevents an
+    // interval tick and an on-demand run from dispatching the same batch twice.
+    let queueWorkerBusy = false;
 
     function getSPSettings() {
         return getDb('settings_sendpulse') || {};
@@ -102,6 +105,8 @@ module.exports = function setupSendPulse(app, getDb, saveDb) {
     // Picks up batches whose scheduledFor time has arrived
     // ═══════════════════════════════════════════════════════
     async function processQueues() {
+        if (queueWorkerBusy) return;
+        queueWorkerBusy = true;
         try {
             const queue = getSPQueue();
             let updated = false;
@@ -197,7 +202,7 @@ module.exports = function setupSendPulse(app, getDb, saveDb) {
 
         } catch (err) {
             console.error('[SP Worker Error]', err.message);
-        }
+        } finally { queueWorkerBusy = false; }
     }
 
     // --- Check Intervals ---
@@ -443,7 +448,9 @@ module.exports = function setupSendPulse(app, getDb, saveDb) {
     // CRON — runs every 5 minutes
     // Picks up batches whose scheduledFor time has arrived
     // ═══════════════════════════════════════════════════════
-    setInterval(async () => {
+    // This former second worker is intentionally disabled. processQueues above
+    // is the single queue worker, preventing duplicate batch dispatches.
+    if (false) setInterval(async () => {
         try {
             const queue = getSPQueue();
             let updated = false;

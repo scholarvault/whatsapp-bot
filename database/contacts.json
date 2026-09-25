@@ -1,15 +1,715 @@
 {
   "918610100624@s.whatsapp.net": {
     "jid": "918610100624@s.whatsapp.net",
-    "name": "Friend",
+    "name": "Shyam Sundar R",
     "leadStatus": "Replied",
     "statusUpdatedAt": "2026-05-22T09:31:37.705Z",
-    "lastRepliedAt": "2026-05-28T06:31:11.881Z",
-    "slaBreach": true,
-    "lastReceivedAt": "2026-05-31T05:21:33.436Z",
+    "lastRepliedAt": "2026-09-25T07:49:58.216Z",
+    "slaBreach": false,
+    "lastReceivedAt": "2026-09-25T07:49:55.000Z",
     "sentiment": "Neutral",
     "tags": [
       "Hot Lead"
+    ],
+    "country": "India",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/625767514_1260435259588470_8864944442773929180_n.jpg?ccb=11-4&oh=01_Q5Aa5gHQcUTC997QO-6uw3zszZn6ENd0hNuUN-k_hOcIe_Ee5g&oe=6AC33190&_nc_sid=5e03e0&_nc_cat=110",
+    "displayNameOverride": "Shyam Sundar R",
+    "nameConfirmed": true,
+    "identityUpdatedAt": "2026-08-11T16:19:24.264Z",
+    "email": "ssundar861@gmail.com",
+    "institution": "SRM",
+    "role": "",
+    "company": "SRM",
+    "priority": "Warm",
+    "leadSource": "manual",
+    "interests": [],
+    "followUpDate": "",
+    "nextAction": ""
+  },
+  "916909910153@s.whatsapp.net": {
+    "jid": "916909910153@s.whatsapp.net",
+    "name": "Mr Kedar Nongdhar",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T08:59:49.814Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:31:07.630Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:31:00.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/713503119_1705372140607495_7283136778712858500_n.jpg?ccb=11-4&oh=01_Q5Aa5QHWC4aaHlDFtoqINLzwkLpNZa2XM6KmE_xbKyOmIofWrw&oe=6A882083&_nc_sid=5e03e0&_nc_cat=101",
+    "lastReceivedAt": "2026-08-12T19:31:00.000Z",
+    "sentiment": "Positive"
+  },
+  "918977082003@s.whatsapp.net": {
+    "jid": "918977082003@s.whatsapp.net",
+    "name": "Abhigna Naik",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:00:10.781Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:31:26.169Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:31:21.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/421920056_1046508950341026_6972912737955691759_n.jpg?ccb=11-4&oh=01_Q5Aa5QHk6T_7SU-ES8G6lEwNR9l7zXpW8eUxHkCh2y-WkCC2pQ&oe=6A8830BD&_nc_sid=5e03e0&_nc_cat=110",
+    "lastReceivedAt": "2026-08-12T19:31:21.000Z",
+    "sentiment": "Positive"
+  },
+  "919445669777@s.whatsapp.net": {
+    "jid": "919445669777@s.whatsapp.net",
+    "name": "Sathyamoorthy Ramachandran",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:00:27.903Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-08T10:10:07.753Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T10:09:49.299Z",
+    "lastReceivedAt": "2026-08-08T10:09:49.299Z",
+    "sentiment": "Neutral"
+  },
+  "918125269599@s.whatsapp.net": {
+    "jid": "918125269599@s.whatsapp.net",
+    "name": "Bhuvan Kethineni",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:00:41.590Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:31:46.646Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:31:40.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/468126972_882636724068015_785820701375388910_n.jpg?ccb=11-4&oh=01_Q5Aa5QELVlIydzugrwBrKBqOrILZ-GouGa-1NhDgRno77deRNQ&oe=6A88133C&_nc_sid=5e03e0&_nc_cat=100",
+    "lastReceivedAt": "2026-08-12T19:31:40.000Z",
+    "sentiment": "Positive"
+  },
+  "919492046714@s.whatsapp.net": {
+    "jid": "919492046714@s.whatsapp.net",
+    "name": "Anupama Pendela",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:00:56.064Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:32:05.892Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:32:00.000Z",
+    "lastReceivedAt": "2026-08-12T19:32:00.000Z",
+    "sentiment": "Positive"
+  },
+  "917013748737@s.whatsapp.net": {
+    "jid": "917013748737@s.whatsapp.net",
+    "name": "Kusuma G",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:01:12.395Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:32:25.591Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:32:20.000Z",
+    "lastReceivedAt": "2026-08-12T19:32:20.000Z",
+    "sentiment": "Positive"
+  },
+  "918870823807@s.whatsapp.net": {
+    "jid": "918870823807@s.whatsapp.net",
+    "name": "Logeetha S",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:01:27.973Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:32:44.341Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:32:39.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/595493562_32851613604486267_6775326977186580511_n.jpg?ccb=11-4&oh=01_Q5Aa5QFoQ40S3AmWZJpgjEYGNCKX4hwgRYybDi8HarjFAGd9Bg&oe=6A8830F2&_nc_sid=5e03e0&_nc_cat=110",
+    "lastReceivedAt": "2026-08-12T19:32:39.000Z",
+    "sentiment": "Positive"
+  },
+  "917049226830@s.whatsapp.net": {
+    "jid": "917049226830@s.whatsapp.net",
+    "name": "Kashish Pawar",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:01:43.412Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:33:03.225Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:32:58.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/699263531_1778318596495786_6714398985623646860_n.jpg?ccb=11-4&oh=01_Q5Aa5QFORTW_iMXh19FWmghwIlZhlDy77S-K9X0nHIXALklTGw&oe=6A882A7B&_nc_sid=5e03e0&_nc_cat=101",
+    "lastReceivedAt": "2026-08-12T19:32:58.000Z",
+    "sentiment": "Positive"
+  },
+  "919381316218@s.whatsapp.net": {
+    "jid": "919381316218@s.whatsapp.net",
+    "name": "Durga Kambala",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:01:55.759Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:33:21.732Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:33:17.000Z",
+    "lastReceivedAt": "2026-08-12T19:33:17.000Z",
+    "sentiment": "Positive"
+  },
+  "917013931599@s.whatsapp.net": {
+    "jid": "917013931599@s.whatsapp.net",
+    "name": "Phani Sri Deepthi Thota",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:02:16.739Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:33:40.000Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:33:36.000Z",
+    "lastReceivedAt": "2026-08-12T19:33:36.000Z",
+    "sentiment": "Positive"
+  },
+  "918977814617@s.whatsapp.net": {
+    "jid": "918977814617@s.whatsapp.net",
+    "name": "Idamakanti Venkata Naga Sumani",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:02:30.000Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-17T15:20:20.722Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:33:54.000Z",
+    "lastReceivedAt": "2026-08-17T15:20:19.000Z",
+    "sentiment": "Urgent"
+  },
+  "919391216661@s.whatsapp.net": {
+    "jid": "919391216661@s.whatsapp.net",
+    "name": "Atkuri Mouni Akshay",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:02:45.014Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-17T15:20:09.288Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:34:12.000Z",
+    "lastReceivedAt": "2026-08-17T15:20:07.000Z",
+    "sentiment": "Urgent"
+  },
+  "919999417377@s.whatsapp.net": {
+    "jid": "919999417377@s.whatsapp.net",
+    "name": "Rekha Ravindran Nair",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:02:59.711Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-12T19:34:35.589Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-12T19:34:31.000Z",
+    "lastReceivedAt": "2026-08-12T19:34:31.000Z",
+    "sentiment": "Positive",
+    "priority": "Warm",
+    "leadSource": "manual",
+    "interests": [],
+    "followUpDate": "2026-08-14T15:13",
+    "nextAction": ""
+  },
+  "201065730335@s.whatsapp.net": {
+    "jid": "201065730335@s.whatsapp.net",
+    "name": "Heba Gad",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:03:17.876Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:28:01.651Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:28:01.652Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/597701405_823777150471891_6974248334216985038_n.jpg?ccb=11-4&oh=01_Q5Aa5QFz2M7aMtcZNc5cPlaQoFph2qchYMrY_iCs3zcHG_h8ow&oe=6A8817E0&_nc_sid=5e03e0&_nc_cat=110"
+  },
+  "918056319725@s.whatsapp.net": {
+    "jid": "918056319725@s.whatsapp.net",
+    "name": "S. THAYANDHI",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:04:02.454Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:28:22.592Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:28:22.593Z"
+  },
+  "19098346629@s.whatsapp.net": {
+    "jid": "19098346629@s.whatsapp.net",
+    "name": "Nishi Miteshkumar Doshi",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:04:20.067Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:28:43.801Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:28:43.802Z"
+  },
+  "18783845242@s.whatsapp.net": {
+    "jid": "18783845242@s.whatsapp.net",
+    "name": "Harsh Maheshwari",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:04:36.274Z",
+    "leadStatus": "New"
+  },
+  "919834599110@s.whatsapp.net": {
+    "jid": "919834599110@s.whatsapp.net",
+    "name": "Prasannakumar Subhash Patil",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:04:53.514Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:29:18.838Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:29:18.840Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/382377692_231302859964339_3014029470345453833_n.jpg?ccb=11-4&oh=01_Q5Aa5QGVQJGhanA5dUu53KXj2SDojFtI03l_olMBDa8MmduUeQ&oe=6A880F2E&_nc_sid=5e03e0&_nc_cat=104"
+  },
+  "917359464401@s.whatsapp.net": {
+    "jid": "917359464401@s.whatsapp.net",
+    "name": "Nikita Teli",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:05:17.217Z",
+    "leadStatus": "Replied",
+    "lastRepliedAt": "2026-08-20T11:54:02.761Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-19T05:31:22.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/536548155_1135324058261563_8782869051857164298_n.jpg?ccb=11-4&oh=01_Q5Aa5gHqePQJ9viZTKuJPjlvmnVLuW3NPiEkkRdGlyPQ4Y_02A&oe=6AC31E6A&_nc_sid=5e03e0&_nc_cat=110",
+    "lastReceivedAt": "2026-08-20T11:54:01.000Z",
+    "sentiment": "Positive"
+  },
+  "918341485222@s.whatsapp.net": {
+    "jid": "918341485222@s.whatsapp.net",
+    "name": "Juvvala Sailaja",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:05:30.466Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:29:59.669Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:29:59.669Z"
+  },
+  "919759884499@s.whatsapp.net": {
+    "jid": "919759884499@s.whatsapp.net",
+    "name": "krishna manohar",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:05:44.847Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:30:21.451Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:30:21.452Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/506015478_1087970086565651_6471380412013906349_n.jpg?ccb=11-4&oh=01_Q5Aa5QG1CzxQTGRADmR39dCpG4HUiYCZsdOg4Tl0BOf38hNcbg&oe=6A8811F3&_nc_sid=5e03e0&_nc_cat=107"
+  },
+  "27633291781@s.whatsapp.net": {
+    "jid": "27633291781@s.whatsapp.net",
+    "name": "McCauley Ashu Obenembot",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:06:00.341Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:30:42.014Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:30:42.015Z"
+  },
+  "919370055480@s.whatsapp.net": {
+    "jid": "919370055480@s.whatsapp.net",
+    "name": "unnatii ammale",
+    "tags": [
+      "CFP Lead"
+    ],
+    "addedAt": "2026-08-08T09:06:28.095Z",
+    "leadStatus": "Messaged",
+    "lastRepliedAt": "2026-08-08T09:31:03.239Z",
+    "slaBreach": false,
+    "statusUpdatedAt": "2026-08-08T09:31:03.240Z"
+  },
+  "60163720821@s.whatsapp.net": {
+    "jid": "60163720821@s.whatsapp.net",
+    "name": "Dr. Wu Yuan Seng",
+    "lastReceivedAt": "2026-08-20T12:00:14.000Z",
+    "sentiment": "Neutral",
+    "slaBreach": true,
+    "leadStatus": "Replied",
+    "statusUpdatedAt": "2026-08-09T09:18:54.026Z",
+    "company": "Sunway University",
+    "country": "Malaysia",
+    "designation": "Invited Speaker (30-Minute Talk)",
+    "lastRepliedAt": "2026-08-20T11:55:31.925Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/306238742_1132943817308696_2640209235419934906_n.jpg?ccb=11-4&oh=01_Q5Aa5gHamaVjfMpHKIm2Rea-HyBiRA4KsXngJ-woUp9PcTS2XA&oe=6AC3308A&_nc_sid=5e03e0&_nc_cat=102",
+    "priority": "Hot",
+    "leadSource": "linkedin",
+    "interests": [
+      "Speaker"
+    ],
+    "followUpDate": "2026-08-14T13:40",
+    "nextAction": "Remind send video tomorrow"
+  },
+  "918489231225@s.whatsapp.net": {
+    "jid": "918489231225@s.whatsapp.net",
+    "name": "Monish",
+    "lastReceivedAt": "2026-08-10T15:08:43.688Z",
+    "sentiment": "Positive",
+    "slaBreach": true,
+    "leadStatus": "Replied",
+    "statusUpdatedAt": "2026-08-10T15:08:19.747Z"
+  },
+  "918291084108@s.whatsapp.net": {
+    "jid": "918291084108@s.whatsapp.net",
+    "name": "Pawan Saharan",
+    "displayNameOverride": "Pawan Saharan",
+    "nameConfirmed": true,
+    "lastReceivedAt": "2026-08-11T19:23:55.000Z",
+    "sentiment": "Negative",
+    "slaBreach": true,
+    "leadStatus": "Replied",
+    "statusUpdatedAt": "2026-08-11T11:30:09.891Z",
+    "lastRepliedAt": "2026-08-11T11:31:25.790Z"
+  },
+  "447710173736@s.whatsapp.net": {
+    "jid": "447710173736@s.whatsapp.net",
+    "name": "447710173736",
+    "lastReceivedAt": "2026-08-17T09:50:53.000Z",
+    "sentiment": "Positive",
+    "slaBreach": true,
+    "leadStatus": "Replied",
+    "statusUpdatedAt": "2026-08-12T07:48:33.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/57251337_301835333818193_1644489921907392512_n.jpg?ccb=11-4&oh=01_Q5Aa5QH-7Cencl-weMzY3Nc-HNlRcXrsnafNqI3s27pTVd91LQ&oe=6A8934C6&_nc_sid=5e03e0&_nc_cat=102"
+  },
+  "email:kedarbadonkupar%40karunya.edu.in": {
+    "jid": "email:kedarbadonkupar%40karunya.edu.in",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "kedarbadonkupar@karunya.edu.in",
+    "name": "Mr Kedar Nongdhar",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_46wgs",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
     ]
+  },
+  "email:abhigna818%40gmail.com": {
+    "jid": "email:abhigna818%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "abhigna818@gmail.com",
+    "name": "Abhigna Naik",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_mjpjg",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:goodrich3210%40gmail.com": {
+    "jid": "email:goodrich3210%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "goodrich3210@gmail.com",
+    "name": "Sathyamoorthy Ramachandran",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_1hmpc",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:kethinenibhuvan2004%40gmail.com": {
+    "jid": "email:kethinenibhuvan2004%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "kethinenibhuvan2004@gmail.com",
+    "name": "Bhuvan Kethineni",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_dfcji",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:anupama.pendela2006%40gmail.com": {
+    "jid": "email:anupama.pendela2006%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "anupama.pendela2006@gmail.com",
+    "name": "Anupama Pendela",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_g6vt1",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:kusumag1526%40gmail.com": {
+    "jid": "email:kusumag1526%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "kusumag1526@gmail.com",
+    "name": "Kusuma G",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_39jeg",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:lgeethalogeetha%40gmail.com": {
+    "jid": "email:lgeethalogeetha%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "lgeethalogeetha@gmail.com",
+    "name": "Logeetha S",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_5isuu",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:pawarkn%40rknec.edu": {
+    "jid": "email:pawarkn%40rknec.edu",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "pawarkn@rknec.edu",
+    "name": "Kashish Pawar",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_bgtri",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:durgakambala5475%40gmail.com": {
+    "jid": "email:durgakambala5475%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "durgakambala5475@gmail.com",
+    "name": "Durga Kambala",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_xotgj",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:phanisrideepthi99%40gmail.com": {
+    "jid": "email:phanisrideepthi99%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "phanisrideepthi99@gmail.com",
+    "name": "Phani Sri Deepthi Thota",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_zecgl",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:isumani2005%40gmail.com": {
+    "jid": "email:isumani2005%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "isumani2005@gmail.com",
+    "name": "Idamakanti Venkata Naga Sumani",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_q45t7",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:mouniakshya%40gmail.com": {
+    "jid": "email:mouniakshya%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "mouniakshya@gmail.com",
+    "name": "Atkuri Mouni Akshay",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_nczxa",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "email:rekhar08%40gmail.com": {
+    "jid": "email:rekhar08%40gmail.com",
+    "channel": "Email only",
+    "createdAt": "2026-08-12T18:40:38.268Z",
+    "email": "rekhar08@gmail.com",
+    "name": "Rekha Ravindran Nair",
+    "emailStatus": "subscribed",
+    "tags": [],
+    "emailLists": [
+      "elist_1786560038261_ef2uo"
+    ],
+    "emailActivity": [
+      {
+        "id": "emailact_1786560038268_bplni",
+        "type": "email_imported",
+        "label": "Email contact imported",
+        "createdAt": "2026-08-12T18:40:38.268Z"
+      }
+    ]
+  },
+  "919744246115@s.whatsapp.net": {
+    "jid": "919744246115@s.whatsapp.net",
+    "name": "919744246115",
+    "lastReceivedAt": "2026-08-12T19:21:12.000Z",
+    "sentiment": "Neutral",
+    "slaBreach": true,
+    "leadStatus": "Replied",
+    "statusUpdatedAt": "2026-08-12T19:20:42.000Z",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/620477620_2154058402115399_3426812539998767378_n.jpg?ccb=11-4&oh=01_Q5Aa5QHkVng13HatfhK4Uq2KOPYSphw2u0L0fidOXwEExL3Ifg&oe=6A89E5DF&_nc_sid=5e03e0&_nc_cat=103"
+  },
+  "60173506610@s.whatsapp.net": {
+    "jid": "60173506610@s.whatsapp.net",
+    "name": "Assoc. Prof. Ts. Dr. Iman Farshchi",
+    "tags": [],
+    "optIn": false,
+    "optInUpdatedAt": "2026-08-15T10:57:20.166Z",
+    "addedAt": "2026-08-15T10:57:20.166Z",
+    "leadStatus": "New",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/251326394_658571128630649_6461345063155363139_n.jpg?ccb=11-4&oh=01_Q5Aa5gEqjNApKAa37lhC4dtEQSI-tbAHdeaJyu_fvAKmwKiduw&oe=6AC3345F&_nc_sid=5e03e0&_nc_cat=105",
+    "lastRepliedAt": "2026-08-20T11:55:39.869Z",
+    "slaBreach": false,
+    "lastReceivedAt": "2026-08-20T11:55:38.000Z",
+    "sentiment": "Positive",
+    "priority": "Warm",
+    "leadSource": "manual",
+    "interests": [],
+    "followUpDate": "2026-08-16T17:03",
+    "nextAction": ""
+  },
+  "918714700160@s.whatsapp.net": {
+    "jid": "918714700160@s.whatsapp.net",
+    "name": "918714700160",
+    "tags": [],
+    "optIn": false,
+    "optInUpdatedAt": "2026-08-21T07:26:37.390Z",
+    "addedAt": "2026-08-21T07:26:37.390Z",
+    "leadStatus": "New",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/369489501_260951123033359_7452866821326816355_n.jpg?ccb=11-4&oh=01_Q5Aa5gE-B46kZbbEBeZhSEneGc0NFvoTAuVjBElSRVFcFgwxdA&oe=6AC32B7D&_nc_sid=5e03e0&_nc_cat=105",
+    "lastRepliedAt": "2026-08-21T07:40:10.378Z",
+    "slaBreach": true,
+    "lastReceivedAt": "2026-08-21T08:11:50.000Z",
+    "sentiment": "Neutral"
+  },
+  "80286427668520@lid": {
+    "jid": "80286427668520@lid",
+    "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/629321721_935861928974573_5455168697947109003_n.jpg?ccb=11-4&oh=01_Q5Aa5gGjZ7zu0TBUr9hteh8otCStZAJaYk03XC6E7EIJ6PqOrQ&oe=6AC3267C&_nc_sid=5e03e0&_nc_cat=100"
+  },
+  "219206557683955@lid": {
+    "jid": "219206557683955@lid"
+  },
+  "447974905090@s.whatsapp.net": {
+    "jid": "447974905090@s.whatsapp.net"
+  },
+  "918105749018@s.whatsapp.net": {
+    "jid": "918105749018@s.whatsapp.net"
+  },
+  "18668392077@s.whatsapp.net": {
+    "jid": "18668392077@s.whatsapp.net"
   }
 }
