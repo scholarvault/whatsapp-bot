@@ -86,7 +86,7 @@ const crmStaticOptions = {
 };
 app.use('/crm/assets', express.static(path.join(__dirname, 'WhatsApp CRM', 'assets'), crmStaticOptions));
 app.use('/crm', crmAuthRequired, express.static(path.join(__dirname, 'WhatsApp CRM'), crmStaticOptions));
-app.get('/legacy', crmAuthRequired, (req, res) => res.sendFile(path.join(__dirname, 'index.legacy.bak.html')));
+app.get('/legacy', (req, res) => res.redirect('/crm'));
 app.get('/', (req, res) => res.redirect('/crm'));
 app.get('/crm/assets/scholarvault-logo.png', (req, res) => {
     res.sendFile('C:/Users/Shyam/Scholar Vault 2/Official Files and documents/files/scholarvault-logo.png');

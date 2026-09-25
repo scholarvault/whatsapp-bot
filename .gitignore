@@ -12,6 +12,7 @@ __pycache__/
 *.txt
 *.log
 _cleanup_archive_*/
+_archive/
 database/settings_brevo.json
 docs.json
 Data training/
