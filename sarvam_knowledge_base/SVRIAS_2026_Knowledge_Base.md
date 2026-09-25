@@ -43,12 +43,39 @@ Researchers, students, and institutions manage their entire academic publishing 
 
 ---
 
-## 2. Archival, DOI & Indexing Policy (100% Genuine, No Fake Promises)
-ScholarVault stands strictly against fake "guaranteed Scopus" claims made by predatory conference organizers.
+## 2. Two-Tiered Publication Architecture & APC Clarity
+Academic publication ethics require absolute clarity. Rather than bundling unverified journal fees into registration costs, SVRIAS 2026 maintains a transparent, two-tiered publication architecture:
 
-- **Archival & DOI:** All accepted and presented papers are archived in **Zenodo** (the European Open Science repository hosted by CERN) with permanent, citable **Zenodo DOIs** (`10.5281/zenodo.*`).
-- **Proceedings:** Official proceedings are published with registered **ISBN** cataloging.
-- **Strict Anti-Paper-Mill Policy on Indexing:** We **never** promise automated Scopus or Web of Science indexing. Indexing outcomes depend entirely on publisher editorial reviews, independent post-publication audits, and journal criteria. We prioritize genuine, rigorous peer review over predatory marketing promises.
+### Tier 1 — Summit Proceedings (Included for All Accepted Papers)
+- All accepted peer-reviewed papers and extended abstracts are published in the official ISBN-registered Conference Proceedings (**ISBN: 978-81-181597-0-4**).
+- Permanent, citable digital DOIs archived via **Zenodo (CERN / OpenAIRE)** with immediate open access.
+- **Fee Status:** 100% included in the conference registration fee. No hidden publication charges or extra fees for proceedings archival.
+
+### Tier 2 — Post-Conference Scopus / Clarivate WoS / UGC-CARE Facilitation
+- Designed for Ph.D. scholars and faculty members seeking high-tier journal indexing.
+- Our editorial committee identifies the **top 15% high-scoring manuscripts** from the summit.
+- Authors receive structured recommendations and comprehensive editorial guidance to satisfy journal submission guidelines for relevant open-access Scopus, Clarivate Web of Science (WoS), or UGC-CARE indexed journals.
+- **APC (Article Processing Charges) Transparency:** Standard APCs (if required by the chosen journal) are handled directly and transparently by authors with the journal publisher, completely free from middleman markups or commission cuts by ScholarVault.
+
+### Summary: Is the publication fee included or separate?
+- **Conference Proceedings (ISBN + Zenodo DOI):** INCLUDED with conference registration.
+- **Journal APC (Scopus/WoS/UGC-CARE):** SEPARATE, because journal publishers charge their own APCs directly. ScholarVault never charges authors extra for journal recommendations.
+
+---
+
+## 3. Legitimacy & Anti-Scam Verification ("Are you scammers?")
+We completely respect scholars asking this question — predatory paper mills and fake conference cartels drain ₹20–50 Crores annually in India. ScholarVault was founded specifically to combat these syndicates.
+
+### How to verify ScholarVault's legitimacy:
+1. **Government of India Recognitions:**
+   - DPIIT-Recognized Startup India Entity: **Certificate IN-0326-9418IG**
+   - Ministry of MSME Registered: **UDYAM-TN-02-0457961**
+2. **Official Cataloging & Real DOIs:**
+   - Registered Conference Proceedings ISBN: **978-81-181597-0-4**
+   - Active Zenodo DOI on CERN repository: **https://doi.org/10.5281/zenodo.22871615**
+3. **Zero Financial Risk on Submissions:** Abstract intake is 100% Free (₹0). You only register after passing double-blind peer review.
+4. **Transparent Leadership & Support:** Founded by Shyam Sundar, with direct phone helpline (`080 6426 1600`) and official WhatsApp desk (`+91 93449 00624`).
+5. **No Guaranteed Indexing Trap:** Predatory cartels sell "guaranteed Scopus in 7 days". ScholarVault strictly follows COPE ethics and never makes false promises.
 
 ---
 
@@ -134,3 +161,9 @@ ScholarVault awards **10 Full Student Research Grants** offering a **100% regist
 
 ### Q: What is the ScholarVault Dashboard (app.scholarvault.in)?
 **A:** It is our dedicated Academic Intelligence portal where scholars can discover verified conferences, submit their research, track double-blind peer review status in real-time, and manage all their publications and certificates in one secure, protected dashboard.
+
+### Q: Is the publication fee included in the registration fee or separate?
+**A:** Tier 1 conference proceedings publication (with official ISBN: 978-81-181597-0-4 and permanent Zenodo DOI) is 100% included in the registration fee. There are zero extra charges for proceedings publication. If an author's paper is in the top 15% and they choose to pursue Tier 2 journal indexing, any journal-level APC is handled directly between the author and the journal with zero markup from ScholarVault.
+
+### Q: Are you scammers? How do I know this is real?
+**A:** We completely understand your caution! ScholarVault is an official DPIIT-recognized entity under Startup India (Certificate IN-0326-9418IG) and MSME registered in Tamil Nadu. Our summit has an official registered ISBN (978-81-181597-0-4) and verifiable Zenodo DOI record (10.5281/zenodo.22871615). Furthermore, submitting an abstract is 100% free with zero upfront payment until you pass double-blind peer review.
