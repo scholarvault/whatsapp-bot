@@ -17,7 +17,7 @@
 
 **Contact Helplines & Desks:**  
 - AI Voice Helpline (DID): 080 6426 1600 (+91 80 6426 1600)  
-- Official WhatsApp Support Desk & Direct Mobile: +91 86101 00624  
+- Official WhatsApp Support Desk & Direct Mobile: +91 93449 00624  
 - Summit Desk Email: conferences@scholarvault.in  
 - General Inquiries & Grievances: info@scholarvault.in / support@scholarvault.in  
 
@@ -115,7 +115,7 @@ ScholarVault awards **10 Full Student Research Grants** offering a **100% regist
 **A:** ScholarVault was founded by Shyam Sundar, an Indian innovator and researcher committed to defending academic integrity and supporting scholars against predatory publishing networks.
 
 ### Q: What are your contact numbers and email?
-**A:** You can call our voice desk at 080 6426 1600, message our direct WhatsApp support desk at +91 86101 00624, or email conferences@scholarvault.in.
+**A:** You can call our voice desk at 080 6426 1600, message our direct WhatsApp support desk at +91 93449 00624, or email conferences@scholarvault.in.
 
 ### Q: Is this conference Scopus indexed?
 **A:** We strictly follow Committee on Publication Ethics (COPE) guidelines and never make fake promises of guaranteed Scopus indexing. All accepted papers receive a permanent Zenodo DOI and official registered ISBN proceedings, with independent post-conference indexing submission.
